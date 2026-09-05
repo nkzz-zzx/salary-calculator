@@ -197,6 +197,7 @@
   .tag-pill { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 1px 8px; }
   .tag-pill.rec { background: var(--green-soft); color: var(--green); }
   .tag-pill.bonus { background: var(--accent-soft); color: var(--accent); }
+  .taxable-note { color: var(--muted); font-size: 12px; white-space: nowrap; }
 
   footer { text-align: center; color: var(--muted); font-size: 12px; padding: 10px 16px 40px; }
   footer a { color: var(--accent); text-decoration: none; }
@@ -405,7 +406,7 @@
     <!-- ===================== 月度明细 ===================== -->
     <section class="card col-12">
       <h2>⑤ 月度明细</h2>
-      <p class="sub">按累计预扣法逐月计算个税与税后收入，结余 = 税后收入 − 消费</p>
+      <p class="sub">按累计预扣法逐月计算；综合所得累计额不含单独计税年终奖，结余 = 税后收入 − 消费</p>
       <div class="table-scroll">
         <table id="monthlyTable">
           <thead>
@@ -416,7 +417,7 @@
               <th>专项扣除</th>
               <th>个人养老金</th>
               <th>起征点</th>
-              <th>累计应纳税所得额</th>
+              <th>综合所得累计应纳税所得额</th>
               <th>个税</th>
               <th>税后收入</th>
               <th>公积金提取</th>
@@ -848,7 +849,7 @@
       '<span style="width:' + (p.v / sum * 100) + '%;background:' + p.c + '"></span>').join("");
 
     // 月度明细表
-    renderMonthly(r, inputs);
+    renderMonthly(r, inputs, split);
 
     // 保存到 localStorage
     saveState();
@@ -862,20 +863,24 @@
       '</div>';
   }
 
-  function renderMonthly(r, inputs) {
+  function renderMonthly(r, inputs, split) {
     const tbody = document.querySelector("#monthlyTable tbody");
     let html = "";
     r.months.forEach((m) => {
       const extra = extraForMonth(inputs.extras, m.month);
       const hasBonus = inputs.bonus > 0 && m.month === inputs.bonusMonth;
+      const taxableNote = !hasBonus ? "" :
+        split.separate > 0 && split.merged > 0 ? "<br><span class='taxable-note'>仅含并入部分</span>" :
+        split.separate > 0 ? "<br><span class='taxable-note'>年终奖另计，未计入</span>" :
+        "<br><span class='taxable-note'>已含并入年终奖</span>";
       html += "<tr>" +
         "<td>" + m.month + " 月</td>" +
-        "<td>¥" + fmt(m.income) + (hasBonus ? " <span class='tag-pill bonus'>含年终奖</span>" : "") + "</td>" +
+        "<td>" + (hasBonus ? "<span class='tag-pill bonus'>含年终奖</span> " : "") + "¥" + fmt(m.income) + "</td>" +
         "<td>¥" + fmt(m.monthlySIVal) + "</td>" +
         "<td>¥" + fmt(m.specialDeduction) + "</td>" +
         "<td>¥" + fmt(m.pensionMonthly) + "</td>" +
         "<td>¥" + fmt(m.basicDeduction) + "</td>" +
-        "<td>¥" + fmt(m.taxable) + "</td>" +
+        "<td>¥" + fmt(m.taxable) + taxableNote + "</td>" +
         "<td>¥" + fmt(m.monthTax) + "</td>" +
         "<td>¥" + fmt(m.afterTax) + "</td>" +
         "<td>¥" + fmt(m.housingWithdraw) + "</td>" +
