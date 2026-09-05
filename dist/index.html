@@ -892,6 +892,12 @@
     // 全年合计
     const all = r.months;
     const sum = (f) => all.reduce((s, m) => s + f(m), 0);
+    const annualTaxableNote = inputs.bonus <= 0 ? "" :
+      split.separate > 0 && split.merged > 0
+        ? "<br><span class='taxable-note'>已含并入年终奖 ¥" + fmt(split.merged) + "；另计 ¥" + fmt(split.separate) + "</span>"
+        : split.separate > 0
+          ? "<br><span class='taxable-note'>另：单独计税年终奖 ¥" + fmt(split.separate) + "</span>"
+          : "<br><span class='taxable-note'>已含并入年终奖 ¥" + fmt(split.merged) + "</span>";
     html += "<tr class='row-total'>" +
       "<td>全年合计</td>" +
       "<td>¥" + fmt(sum((m) => m.income)) + "</td>" +
@@ -899,7 +905,7 @@
       "<td>¥" + fmt(sum((m) => m.specialDeduction)) + "</td>" +
       "<td>¥" + fmt(sum((m) => m.pensionMonthly)) + "</td>" +
       "<td>¥" + fmt(sum((m) => m.basicDeduction)) + "</td>" +
-      "<td>—</td>" +
+      "<td>¥" + fmt(r.comprehensiveTaxable) + annualTaxableNote + "</td>" +
       "<td>¥" + fmt(sum((m) => m.monthTax)) + "</td>" +
       "<td>¥" + fmt(sum((m) => m.afterTax)) + "</td>" +
       "<td>¥" + fmt(sum((m) => m.housingWithdraw)) + "</td>" +
