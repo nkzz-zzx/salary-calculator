@@ -180,7 +180,6 @@
   .pos { color: var(--green); font-weight: 600; }
   .neg { color: var(--red); font-weight: 600; }
   .row-total td { font-weight: 700; background: #f6f8fc; border-top: 2px solid var(--line); }
-  .row-bonus td { background: #f0f6ff; font-weight: 600; }
   .dec { background: #fbfcfd; }
 
   .extra-row { display: grid; grid-template-columns: 130px 1fr 40px; gap: 10px; margin-bottom: 8px; align-items: center; }
@@ -197,6 +196,7 @@
 
   .tag-pill { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 1px 8px; }
   .tag-pill.rec { background: var(--green-soft); color: var(--green); }
+  .tag-pill.bonus { background: var(--accent-soft); color: var(--accent); }
 
   footer { text-align: center; color: var(--muted); font-size: 12px; padding: 10px 16px 40px; }
   footer a { color: var(--accent); text-decoration: none; }
@@ -417,8 +417,7 @@
               <th>个人养老金</th>
               <th>起征点</th>
               <th>累计应纳税所得额</th>
-              <th>当月个税(综合)</th>
-              <th>年终奖个税</th>
+              <th>个税</th>
               <th>税后收入</th>
               <th>公积金提取</th>
               <th>消费支出</th>
@@ -718,20 +717,27 @@
       inputs.extras.reduce((s, e) => s + e.amount, 0);
     const net = afterTax + annualWithdrawal - annualConsumption;
 
-    // 逐月（累计预扣法，仅工资薪金 + 补贴 + 股票，年终奖单列一行）
+    // 逐月（年终奖并入发放月展示；计税时仍按所选方案区分合并与单独部分）
     const months = [];
     let cumIncome = 0, cumDeduction = 0, cumTax = 0;
     for (let m = 1; m <= 12; m++) {
+      let comprehensiveIncome = monthlySalary;
+      if (m === inputs.stockMonth) comprehensiveIncome += inputs.stock;
+      if (m === inputs.bonusMonth) comprehensiveIncome += split.merged;
+
       let income = monthlySalary;
       if (m === inputs.stockMonth) income += inputs.stock;
+      if (m === inputs.bonusMonth) income += inputs.bonus;
 
       const deduction = 5000 + monthlySIVal + inputs.specialDeduction + inputs.personalPension / 12;
-      cumIncome += income;
+      cumIncome += comprehensiveIncome;
       cumDeduction += deduction;
       const taxable = Math.max(0, cumIncome - cumDeduction);
       const thisCumTax = taxByBrackets(taxable, ANNUAL_BRACKETS);
-      const monthTax = thisCumTax - cumTax;
+      const comprehensiveMonthTax = thisCumTax - cumTax;
       cumTax = thisCumTax;
+      const separateMonthTax = m === inputs.bonusMonth ? sepTax : 0;
+      const monthTax = comprehensiveMonthTax + separateMonthTax;
 
       const consumption = inputs.fixedConsumption + extraForMonth(inputs.extras, m);
       const afterTaxM = income - monthlySIVal - monthTax;
@@ -740,28 +746,15 @@
         month: m,
         income, monthlySIVal, specialDeduction: inputs.specialDeduction,
         pensionMonthly: inputs.personalPension / 12,
-        basicDeduction: 5000, taxable, monthTax, sepMonthTax: 0,
+        basicDeduction: 5000, taxable, monthTax,
         housingWithdraw: inputs.housingWithdraw,
         afterTax: afterTaxM, consumption, net: afterTaxM + inputs.housingWithdraw - consumption,
       });
     }
 
-    // 工资薪金部分综合所得税（不含年终奖）；年终奖单列一行
-    const salaryTax = cumTax;
-    const mergedIncrementTax = comprehensiveTax - salaryTax; // 合并部分带来的综合所得税增量
-    const bonusAfterTax = inputs.bonus - mergedIncrementTax - sepTax;
-    const bonusRow = {
-      isBonus: true, month: 0,
-      income: inputs.bonus, monthlySIVal: 0, specialDeduction: 0,
-      pensionMonthly: 0, basicDeduction: 0, taxable: comprehensiveTaxable,
-      monthTax: mergedIncrementTax, sepMonthTax: sepTax,
-      housingWithdraw: 0, afterTax: bonusAfterTax, consumption: 0, net: bonusAfterTax,
-    };
-
     return {
       monthlySIVal, otherTaxable, comprehensiveTaxable, comprehensiveTax,
       sepTax, totalTax, annualIncome, annualSI, afterTax, annualConsumption, net, months,
-      bonusRow,
       personalPension: inputs.personalPension,
       annualPensionAccount, annualMedicalAccount, annualHousingAccount, annualWithdrawal,
     };
@@ -874,16 +867,16 @@
     let html = "";
     r.months.forEach((m) => {
       const extra = extraForMonth(inputs.extras, m.month);
+      const hasBonus = inputs.bonus > 0 && m.month === inputs.bonusMonth;
       html += "<tr>" +
         "<td>" + m.month + " 月</td>" +
-        "<td>¥" + fmt(m.income) + "</td>" +
+        "<td>¥" + fmt(m.income) + (hasBonus ? " <span class='tag-pill bonus'>含年终奖</span>" : "") + "</td>" +
         "<td>¥" + fmt(m.monthlySIVal) + "</td>" +
         "<td>¥" + fmt(m.specialDeduction) + "</td>" +
         "<td>¥" + fmt(m.pensionMonthly) + "</td>" +
         "<td>¥" + fmt(m.basicDeduction) + "</td>" +
         "<td>¥" + fmt(m.taxable) + "</td>" +
         "<td>¥" + fmt(m.monthTax) + "</td>" +
-        "<td>—</td>" +
         "<td>¥" + fmt(m.afterTax) + "</td>" +
         "<td>¥" + fmt(m.housingWithdraw) + "</td>" +
         "<td>¥" + fmt(m.consumption) + (extra > 0 ? " <span class='tag-pill rec'>含额外</span>" : "") + "</td>" +
@@ -891,24 +884,8 @@
         "</tr>";
     });
 
-    // 年终奖单独一行
-    if (r.bonusRow.income > 0) {
-      const b = r.bonusRow;
-      html += "<tr class='row-bonus'>" +
-        "<td>年终奖</td>" +
-        "<td>¥" + fmt(b.income) + "</td>" +
-        "<td>—</td><td>—</td><td>—</td><td>—</td>" +
-        "<td>¥" + fmt(b.taxable) + "</td>" +
-        "<td>¥" + fmt(b.monthTax) + "</td>" +
-        "<td>" + (b.sepMonthTax > 0 ? "¥" + fmt(b.sepMonthTax) : "—") + "</td>" +
-        "<td>¥" + fmt(b.afterTax) + "</td>" +
-        "<td>—</td><td>—</td>" +
-        "<td class='" + (b.net >= 0 ? "pos" : "neg") + "'>¥" + signed(b.net) + "</td>" +
-        "</tr>";
-    }
-
-    // 全年合计（月度 + 年终奖）
-    const all = r.months.concat([r.bonusRow]);
+    // 全年合计
+    const all = r.months;
     const sum = (f) => all.reduce((s, m) => s + f(m), 0);
     html += "<tr class='row-total'>" +
       "<td>全年合计</td>" +
@@ -919,7 +896,6 @@
       "<td>¥" + fmt(sum((m) => m.basicDeduction)) + "</td>" +
       "<td>—</td>" +
       "<td>¥" + fmt(sum((m) => m.monthTax)) + "</td>" +
-      "<td>¥" + fmt(sum((m) => m.sepMonthTax)) + "</td>" +
       "<td>¥" + fmt(sum((m) => m.afterTax)) + "</td>" +
       "<td>¥" + fmt(sum((m) => m.housingWithdraw)) + "</td>" +
       "<td>¥" + fmt(sum((m) => m.consumption)) + "</td>" +
