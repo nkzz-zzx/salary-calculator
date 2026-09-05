@@ -286,7 +286,7 @@
           </div>
           <div class="field" id="bonusMonthsField" hidden>
             <div class="mini-label">月数（0.5–36 个月）</div>
-            <div class="input-wrap"><select id="bonusMonths" aria-label="年终奖折算工资月数"></select></div>
+            <div class="input-wrap"><input type="number" id="bonusMonths" value="2" min="0.5" max="36" step="0.5" aria-label="年终奖折算工资月数"><span class="suffix">个月</span></div>
           </div>
           <div class="field">
             <div class="mini-label">发放月份</div>
@@ -633,15 +633,6 @@
     return Math.min(num("pensionAmount"), 12000);
   }
 
-  function populateBonusMonths() {
-    const select = $("bonusMonths");
-    select.innerHTML = Array.from({ length: 72 }, (_, i) => {
-      const months = (i + 1) / 2;
-      const value = Number.isInteger(months) ? String(months) : months.toFixed(1);
-      return '<option value="' + value + '"' + (months === 2 ? ' selected' : '') + '>' + value + ' 个月</option>';
-    }).join("");
-  }
-
   function syncBonusAndPensionUI() {
     const type = document.querySelector('input[name="bonusType"]:checked').value;
     $("bonusAmountField").hidden = type !== "amount";
@@ -982,14 +973,7 @@
     set("subsidy", data.subsidy);
     if (data.deductions) deductionState = Object.assign(defaultDeductionState(), data.deductions);
     set("stock", data.stock); set("stockMonth", data.stockMonth);
-    set("bonus", data.bonus); set("bonusMonth", data.bonusMonth);
-    if (data.bonusMonths !== undefined && data.bonusMonths !== null) {
-      const savedMonths = parseFloat(data.bonusMonths);
-      if (!isNaN(savedMonths)) {
-        const normalizedMonths = Math.min(36, Math.max(0.5, Math.round(savedMonths * 2) / 2));
-        $("bonusMonths").value = Number.isInteger(normalizedMonths) ? String(normalizedMonths) : normalizedMonths.toFixed(1);
-      }
-    }
+    set("bonus", data.bonus); set("bonusMonth", data.bonusMonth); set("bonusMonths", data.bonusMonths);
     if (data.bonusType) {
       const r = document.querySelector('input[name="bonusType"][value="' + data.bonusType + '"]');
       if (r) r.checked = true;
@@ -1064,7 +1048,6 @@
   }
 
   // ---------- 初始化 ----------
-  populateBonusMonths();
   restoreState();
   bind();
   renderDeductions();
