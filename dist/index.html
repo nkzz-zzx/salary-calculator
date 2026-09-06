@@ -3,1046 +3,130 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>工资与个税计算器</title>
+<meta name="description" content="智能工具小站，提供简单实用的在线工具。">
+<title>智能工具小站</title>
 <style>
   :root {
     --bg: #f4f6fb;
     --card: #ffffff;
     --line: #e5e9f2;
-    --text: #1f2937;
-    --muted: #6b7280;
+    --text: #172033;
+    --muted: #64748b;
     --accent: #2563eb;
+    --accent-dark: #1e3a8a;
     --accent-soft: #eaf1fe;
-    --green: #16a34a;
-    --green-soft: #e8f7ee;
-    --red: #dc2626;
-    --red-soft: #fdecec;
-    --amber: #d97706;
-    --amber-soft: #fdf3e3;
-    --radius: 14px;
-    --shadow: 0 1px 3px rgba(16,24,40,.06), 0 6px 20px rgba(16,24,40,.05);
+    --radius: 16px;
+    --shadow: 0 10px 30px rgba(30, 58, 138, .08);
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
+    min-height: 100vh;
     font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, -apple-system, sans-serif;
-    background: var(--bg);
     color: var(--text);
+    background: radial-gradient(circle at 12% 8%, rgba(59,130,246,.12), transparent 28rem), var(--bg);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
   header {
-    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #3b82f6 100%);
+    background: linear-gradient(135deg, var(--accent-dark) 0%, var(--accent) 58%, #3b82f6 100%);
     color: #fff;
-    padding: 26px 20px;
-    text-align: center;
   }
-  header h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: .5px; }
-  header p { margin: 6px 0 0; font-size: 13px; opacity: .85; }
-  main { max-width: 1360px; margin: 0 auto; padding: 20px 16px 60px; }
-  .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
-  .col-5 { grid-column: span 5; }
-  .col-7 { grid-column: span 7; }
-  .col-12 { grid-column: span 12; }
-  @media (max-width: 900px) {
-    .col-5, .col-7 { grid-column: span 12; }
+  .header-inner, main { width: min(1080px, calc(100% - 32px)); margin: 0 auto; }
+  .header-inner { padding: 42px 0 40px; }
+  .brand-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255,255,255,.85);
   }
-  .card {
+  .brand-dot { width: 9px; height: 9px; border-radius: 50%; background: #86efac; box-shadow: 0 0 0 5px rgba(134,239,172,.16); }
+  h1 { margin: 0; font-size: clamp(30px, 5vw, 42px); line-height: 1.2; letter-spacing: .03em; }
+  header p { margin: 10px 0 0; font-size: 16px; color: rgba(255,255,255,.82); }
+  main { padding: 30px 0 64px; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+  .section-head h2 { margin: 0; font-size: 20px; }
+  .count { color: var(--muted); font-size: 14px; }
+  .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .tool-card {
+    min-height: 176px;
+    display: flex;
+    flex-direction: column;
+    color: inherit;
+    text-decoration: none;
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    padding: 20px;
+    padding: 22px;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
   }
-  .card h2 {
-    margin: 0 0 4px;
-    font-size: 17px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .card h2 .badge { font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 2px 8px; }
-  .card .sub { color: var(--muted); font-size: 12.5px; margin: 0 0 16px; }
-  .field { margin-bottom: 14px; }
-  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151; }
-  .field .hint { font-weight: 400; color: var(--muted); font-size: 12px; }
-  .mini-label { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
-  .input-wrap { position: relative; }
-  .input-wrap input, .input-wrap select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    font-size: 15px;
-    color: var(--text);
-    background: #fbfcfe;
-    transition: border-color .15s, box-shadow .15s;
-  }
-  .input-wrap input:focus, .input-wrap select:focus {
+  .tool-card:hover, .tool-card:focus-visible {
+    transform: translateY(-3px);
+    border-color: #bfd2fb;
+    box-shadow: 0 16px 36px rgba(30,58,138,.13);
     outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
   }
-  .input-wrap .suffix { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; pointer-events: none; }
-  .input-wrap input { padding-right: 52px; }
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 480px) { .row2 { grid-template-columns: 1fr; } }
-  .note {
-    font-size: 12px; color: var(--muted); background: #f8fafc; border: 1px dashed var(--line);
-    border-radius: 10px; padding: 10px 12px; margin-top: 4px;
+  .tool-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+  .tool-icon {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: linear-gradient(145deg, var(--accent-dark), var(--accent));
+    color: #fff;
+    font-size: 22px;
+    font-weight: 800;
   }
-  .note b { color: #475569; }
-
-  /* 专项附加扣除 accordion */
-  .ded-list { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
-  .ded-item { border-bottom: 1px solid var(--line); }
-  .ded-item:last-child { border-bottom: none; }
-  .ded-head { display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; background: #fff; transition: background .15s; }
-  .ded-head:hover { background: #f8fafc; }
-  .ded-item.enabled .ded-head { background: var(--accent-soft); }
-  .ded-cb { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; flex: none; }
-  .ded-head .name { font-weight: 600; font-size: 13.5px; color: #1f2937; flex: 1; }
-  .ded-head .ded-amount { font-size: 13px; font-weight: 700; color: var(--green); }
-  .ded-head .chev { color: var(--muted); font-size: 11px; width: 16px; text-align: center; flex: none; }
-  .ded-body { padding: 6px 14px 14px 41px; background: #fbfcfe; }
-  .ded-body[hidden] { display: none; }
-  .ded-hint { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-  .ded-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-  .ded-sub-label { font-size: 13px; color: #374151; font-weight: 600; }
-  .ded-sub select, .ded-sub input[type=number] { padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; background: #fff; color: var(--text); }
-  .ded-calc { font-size: 12.5px; color: var(--muted); }
-  .ded-opt { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; cursor: pointer; margin-bottom: 6px; transition: .15s; background: #fff; }
-  .ded-opt:hover { border-color: #c7d7f8; }
-  .ded-opt.selected { border-color: var(--accent); background: var(--accent-soft); }
-  .ded-opt input { accent-color: var(--accent); }
-  .ded-opt .o-label { font-weight: 600; font-size: 13px; }
-  .ded-opt .o-amount { font-size: 13px; color: var(--green); font-weight: 700; }
-  .ded-opt .o-desc { font-size: 12px; color: var(--muted); width: 100%; margin-left: 22px; }
-  .ded-total { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 10px 14px; background: #f8fafc; border: 1px dashed var(--line); border-radius: 10px; font-size: 13.5px; }
-  .ded-total b { color: var(--accent); font-size: 16px; }
-
-  /* 年终奖类型切换 & 个人养老金 */
-  .bonus-type-switch { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-  .bt-opt { padding: 7px 16px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; background: #fff; transition: .15s; }
-  .bt-opt input { display: none; }
-  .bt-opt.selected { background: var(--accent-soft); color: var(--accent); }
-  .pension-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  .switch-label { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; cursor: pointer; color: #374151; }
-  .switch-label input { accent-color: var(--accent); width: 16px; height: 16px; }
-  .field-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
-
-  /* bonus options */
-  .mode-cards { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 16px; }
-  .mode-card { position: relative; border: 1.5px solid var(--line); border-radius: 12px; padding: 13px 16px; cursor: pointer; transition: .15s; background: #fff; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
-  .mode-card:hover { border-color: #c7d7f8; }
-  .mode-card.selected { border-color: var(--accent); background: var(--accent-soft); }
-  .mode-card input { position: absolute; opacity: 0; }
-  .mode-card .mc-main { flex: 1; min-width: 0; }
-  .mode-card .tt { font-weight: 700; font-size: 14px; }
-  .mode-card .ds { font-size: 12px; color: var(--muted); margin-top: 3px; }
-  .mode-card .tax { font-size: 14px; font-weight: 700; white-space: nowrap; }
-  .mode-card .tag { display: inline-block; font-size: 10.5px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 999px; padding: 1px 8px; margin-left: 6px; vertical-align: 1px; }
-  .bd-title { font-size: 13px; font-weight: 700; color: #374151; margin: 14px 0 8px; }
-  .bd-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 0; }
-  .bd-table th, .bd-table td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: normal; }
-  .bd-table th { background: #f8fafc; color: #475569; font-weight: 600; }
-  .bd-table th:first-child, .bd-table td:first-child { text-align: left; }
-  .bd-table tr.bd-rec td { background: var(--green-soft); font-weight: 600; color: #14532d; }
-  .split-box { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: #f8fafc; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
-  .split-box input { width: 160px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; }
-  .split-box .lbl { font-size: 13px; color: #374151; font-weight: 600; }
-  .split-box .out { font-size: 13px; color: var(--muted); }
-
-  /* summary cards */
-  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
-  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
-  .kpi .k-label { font-size: 12px; color: var(--muted); }
-  .kpi .k-value { font-size: 21px; font-weight: 700; margin-top: 4px; letter-spacing: -.3px; }
-  .kpi .k-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
-  .kpi.hl { background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff; border: none; }
-  .kpi.hl .k-label, .kpi.hl .k-sub { color: rgba(255,255,255,.75); }
-  .kpi.green .k-value { color: var(--green); }
-  .kpi.red .k-value { color: var(--red); }
-
-  .bar-wrap { margin: 6px 0 2px; }
-  .bar { display: flex; height: 18px; border-radius: 999px; overflow: hidden; background: #eef1f6; }
-  .bar span { display: block; height: 100%; }
-  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: 12px; color: var(--muted); }
-  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
-
-  /* tables */
-  .table-scroll { overflow-x: auto; margin-top: 12px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 760px; }
-  th, td { padding: 9px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); }
-  th { background: #f8fafc; color: #475569; font-weight: 600; position: sticky; top: 0; }
-  td:first-child, th:first-child { text-align: left; }
-  tbody tr:hover { background: #fafbfe; }
-  .pos { color: var(--green); font-weight: 600; }
-  .neg { color: var(--red); font-weight: 600; }
-  .row-total td { font-weight: 700; background: #f6f8fc; border-top: 2px solid var(--line); }
-  .dec { background: #fbfcfd; }
-
-  .extra-row { display: grid; grid-template-columns: 130px 1fr 40px; gap: 10px; margin-bottom: 8px; align-items: center; }
-  .extra-row select, .extra-row input { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; width: 100%; }
-  .btn {
-    border: none; cursor: pointer; font-size: 13px; font-weight: 600; border-radius: 9px;
-    padding: 9px 14px; transition: .15s; background: var(--accent-soft); color: var(--accent);
+  .tag { color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 4px 10px; font-size: 13px; font-weight: 700; }
+  .tool-card h3 { margin: 17px 0 5px; font-size: 19px; }
+  .tool-card p { margin: 0; color: var(--muted); font-size: 15px; }
+  .tool-action { margin-top: auto; padding-top: 18px; display: flex; align-items: center; justify-content: space-between; color: var(--accent); font-size: 14px; font-weight: 700; }
+  .tool-action span:last-child { font-size: 20px; transition: transform .18s ease; }
+  .tool-card:hover .tool-action span:last-child { transform: translateX(3px); }
+  .coming { margin: 20px 0 0; color: var(--muted); font-size: 14px; }
+  footer { padding: 20px 16px 34px; text-align: center; color: var(--muted); font-size: 13px; }
+  @media (max-width: 560px) {
+    .header-inner { padding: 32px 0 30px; }
+    main { padding-top: 24px; }
+    .tool-card { min-height: 164px; padding: 19px; }
   }
-  .btn:hover { background: #dbe7fd; }
-  .btn.danger { background: var(--red-soft); color: var(--red); }
-  .btn.danger:hover { background: #fbdcdc; }
-  .btn.ghost { background: #f1f5f9; color: #475569; }
-  .btn.ghost:hover { background: #e2e8f0; }
-
-  .tag-pill { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 1px 8px; }
-  .tag-pill.rec { background: var(--green-soft); color: var(--green); }
-  .tag-pill.bonus { background: var(--accent-soft); color: var(--accent); }
-  .taxable-note { color: var(--muted); font-size: 12px; white-space: nowrap; }
-
-  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 10px 16px 40px; }
-  footer a { color: var(--accent); text-decoration: none; }
 </style>
 </head>
 <body>
 <header>
-  <h1>工资与个税计算器</h1>
-  <p>综合所得年度汇算 · 累计预扣法 · 年终奖单独 / 合并 / 混合计税优化</p>
+  <div class="header-inner">
+    <div class="brand-kicker"><span class="brand-dot" aria-hidden="true"></span>简单、清晰、即开即用</div>
+    <h1>智能工具小站</h1>
+    <p>把常用计算和实用功能集中在一个地方。</p>
+  </div>
 </header>
 
 <main>
-  <div class="grid">
-
-    <!-- ===================== 收入与扣除 ===================== -->
-    <section class="card col-7">
-      <h2>① 收入与扣除设置 <span class="badge">按月</span></h2>
-      <p class="sub">填写税前月工资、公积金与专项扣除等信息</p>
-
-      <div class="row2">
-        <div class="field">
-          <label>基本工资（元/月）</label>
-          <div class="input-wrap"><input type="number" id="base" value="20000" min="0" step="100"><span class="suffix">元</span></div>
+  <section aria-labelledby="tools-title">
+    <div class="section-head">
+      <h2 id="tools-title">全部工具</h2>
+      <span class="count">1 个工具</span>
+    </div>
+    <div class="tool-grid">
+      <a class="tool-card" href="./salary-calculator.html">
+        <div class="tool-top">
+          <div class="tool-icon" aria-hidden="true">¥</div>
+          <span class="tag">收入与个税</span>
         </div>
-        <div class="field">
-          <label>公积金系数 <span class="hint">（个人缴存比例，5%–12%）</span></label>
-          <div class="input-wrap"><input type="number" id="housingPct" value="12" min="5" max="12" step="1"><span class="suffix">%</span></div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>每月公积金提取金额（元/月）</label>
-        <div class="input-wrap"><input type="number" id="housingWithdraw" value="0" min="0" step="100"><span class="suffix">元</span></div>
-        <div class="field-note">每月从公积金账户提取的现金，计入当月结余（可支配现金），公积金账户余额相应减少。</div>
-      </div>
-
-      <div class="field">
-        <label>专项附加扣除 <span class="hint">（勾选后展开二级选项，金额自动计算）</span></label>
-        <div class="ded-list" id="deductionList"></div>
-        <div class="ded-total">专项附加扣除合计（元/月）<b id="dedTotal">¥0</b></div>
-      </div>
-
-      <div class="field">
-        <label>个人养老金 <span class="hint">（递延纳税）</span></label>
-        <div class="pension-row">
-          <label class="switch-label"><input type="checkbox" id="pensionEnabled"> 参加个人养老金</label>
-          <div class="input-wrap" id="pensionAmountWrap" hidden style="max-width:220px">
-            <input type="number" id="pensionAmount" value="12000" min="0" max="12000" step="1000"><span class="suffix">元/年</span>
-          </div>
-        </div>
-        <div class="field-note">每年最高 12000 元，可在综合所得中税前扣除，领取时按 3% 缴税。此处按全年金额平均分摊到 12 个月。</div>
-      </div>
-
-      <div class="field">
-        <label>补贴性收入（元/月）</label>
-        <div class="input-wrap"><input type="number" id="subsidy" value="0" min="0" step="100"><span class="suffix">元</span></div>
-      </div>
-
-      <div class="row2">
-        <div class="field">
-          <label>股票 / 股权激励（元/年）</label>
-          <div class="input-wrap"><input type="number" id="stock" value="0" min="0" step="1000"><span class="suffix">元</span></div>
-        </div>
-        <div class="field">
-          <label>股票发放月份</label>
-          <div class="input-wrap">
-            <select id="stockMonth">
-              <option value="1">1 月</option><option value="2">2 月</option><option value="3">3 月</option>
-              <option value="4">4 月</option><option value="5">5 月</option><option value="6">6 月</option>
-              <option value="7">7 月</option><option value="8">8 月</option><option value="9">9 月</option>
-              <option value="10">10 月</option><option value="11">11 月</option><option value="12" selected>12 月</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>年终奖 <span class="hint">（按金额或按 N 个月工资）</span></label>
-        <div class="bonus-type-switch" id="bonusTypeSwitch">
-          <label class="bt-opt selected"><input type="radio" name="bonusType" value="amount" checked>按金额</label>
-          <label class="bt-opt"><input type="radio" name="bonusType" value="months">按 N 个月工资</label>
-        </div>
-        <div class="row2" style="margin-top:10px">
-          <div class="field" id="bonusAmountField">
-            <div class="mini-label">金额</div>
-            <div class="input-wrap"><input type="number" id="bonus" value="30000" min="0" step="1000"><span class="suffix">元</span></div>
-          </div>
-          <div class="field" id="bonusMonthsField" hidden>
-            <div class="mini-label">月数（0.5–36 个月）</div>
-            <div class="input-wrap"><input type="number" id="bonusMonths" value="2" min="0.5" max="36" step="0.5" aria-label="年终奖折算工资月数"><span class="suffix">个月</span></div>
-          </div>
-          <div class="field">
-            <div class="mini-label">发放月份</div>
-            <div class="input-wrap">
-              <select id="bonusMonth">
-                <option value="1">1 月</option><option value="2">2 月</option><option value="3">3 月</option>
-                <option value="4">4 月</option><option value="5">5 月</option><option value="6">6 月</option>
-                <option value="7">7 月</option><option value="8">8 月</option><option value="9">9 月</option>
-                <option value="10">10 月</option><option value="11">11 月</option><option value="12" selected>12 月</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div class="field-note" id="bonusHint">当前年终奖 = ¥30,000</div>
-      </div>
-
-      <div class="note">
-        <b>计算假设：</b>五险一金个人部分按 养老 8% + 医疗 2% + 失业 0.5% + 公积金（按系数）计算，缴费基数取基本工资，未考虑各地社保基数上下限（如需可在基本工资中近似）。股票与年终奖并入当月收入后不重复缴纳五险一金。
-      </div>
-    </section>
-
-    <!-- ===================== 年终奖方案 ===================== -->
-    <section class="card col-5">
-      <h2>② 年终奖计税方案 <span class="badge">可避税</span></h2>
-      <p class="sub">单独计税、合并计税或部分单独部分合并；推荐方案已自动求最优拆分</p>
-
-      <div class="mode-cards" id="modeCards">
-        <label class="mode-card" data-mode="separate">
-          <input type="radio" name="bonusMode" value="separate">
-          <div class="mc-main">
-            <div class="tt">单独计税</div>
-            <div class="ds">年终奖全部单独按月度税率表计税</div>
-          </div>
-          <div class="tax" id="tax-separate">—</div>
-        </label>
-        <label class="mode-card" data-mode="merged">
-          <input type="radio" name="bonusMode" value="merged">
-          <div class="mc-main">
-            <div class="tt">合并计税</div>
-            <div class="ds">年终奖全部并入当年综合所得</div>
-          </div>
-          <div class="tax" id="tax-merged">—</div>
-        </label>
-        <label class="mode-card" data-mode="mixed">
-          <input type="radio" name="bonusMode" value="mixed" checked>
-          <div class="mc-main">
-            <div class="tt">混合计税 <span class="tag">推荐</span></div>
-            <div class="ds">部分单独 + 部分合并，税负最低</div>
-          </div>
-          <div class="tax" id="tax-mixed">—</div>
-        </label>
-      </div>
-
-      <div class="split-box">
-        <span class="lbl">单独计税金额</span>
-        <input type="number" id="separateAmount" value="0" min="0" step="100">
-        <span class="out">剩余 <b id="mergedAmount">0</b> 元并入综合所得</span>
-      </div>
-
-      <div class="bar-wrap" style="margin-top:16px">
-        <div class="bar" id="bonusBar"></div>
-        <div class="legend">
-          <span><i style="background:#2563eb"></i>单独计税部分</span>
-          <span><i style="background:#93c5fd"></i>合并计税部分</span>
-        </div>
-      </div>
-
-      <div class="bd-title">方案税负拆解</div>
-      <table class="bd-table">
-        <thead>
-          <tr><th>方案</th><th>综合所得税</th><th>年终奖单独税</th><th>个税合计</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>全部单独</td><td id="bd-sep-comp">—</td><td id="bd-sep-bonus">—</td><td id="bd-sep-total">—</td></tr>
-          <tr><td>全部合并</td><td id="bd-mer-comp">—</td><td id="bd-mer-bonus">—</td><td id="bd-mer-total">—</td></tr>
-          <tr class="bd-rec"><td>混合（推荐）</td><td id="bd-mix-comp">—</td><td id="bd-mix-bonus">—</td><td id="bd-mix-total">—</td></tr>
-        </tbody>
-      </table>
-
-      <p class="sub" style="margin-top:12px; margin-bottom:0">
-        年终奖单独计税政策延续至 <b>2027年12月31日</b>（财政部、税务总局公告 2023 年第 30 号）。
-      </p>
-    </section>
-
-    <!-- ===================== 消费支出 ===================== -->
-    <section class="card col-12">
-      <h2>③ 每月消费支出</h2>
-      <p class="sub">设置固定月消费，并可为特定月份增加额外开支</p>
-      <div class="row2" style="max-width:520px">
-        <div class="field">
-          <label>每月固定消费（元/月）</label>
-          <div class="input-wrap"><input type="number" id="fixedConsumption" value="8000" min="0" step="100"><span class="suffix">元</span></div>
-        </div>
-      </div>
-      <div style="margin-top:6px">
-        <div style="font-size:13px; font-weight:600; color:#374151; margin-bottom:8px">特定月份额外开支</div>
-        <div id="extraList"></div>
-        <button class="btn" id="addExtra" type="button">+ 添加额外开支</button>
-      </div>
-    </section>
-
-    <!-- ===================== 年度概览 ===================== -->
-    <section class="card col-12">
-      <h2>④ 年度概览</h2>
-      <p class="sub">全年税前税后、个税、五险一金与消费结余</p>
-      <div class="kpis" id="kpis"></div>
-      <div class="bar-wrap"><div class="bar" id="annualBar"></div></div>
-      <div class="legend">
-        <span><i style="background:#16a34a"></i>税后收入</span>
-        <span><i style="background:#2563eb"></i>个税</span>
-        <span><i style="background:#f59e0b"></i>五险一金</span>
-        <span><i style="background:#9ca3af"></i>消费支出</span>
-      </div>
-    </section>
-
-    <!-- ===================== 月度明细 ===================== -->
-    <section class="card col-12">
-      <h2>⑤ 月度明细</h2>
-      <p class="sub">按累计预扣法逐月计算；综合所得累计额不含单独计税年终奖，结余 = 税后收入 − 消费</p>
-      <div class="table-scroll">
-        <table id="monthlyTable">
-          <thead>
-            <tr>
-              <th>月份</th>
-              <th>税前收入</th>
-              <th>五险一金</th>
-              <th>专项扣除</th>
-              <th>个人养老金</th>
-              <th>起征点</th>
-              <th>综合所得累计应纳税所得额</th>
-              <th>个税</th>
-              <th>税后收入</th>
-              <th>公积金提取</th>
-              <th>消费支出</th>
-              <th>结余</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-  </div>
+        <h3>工资与个税计算器</h3>
+        <p>测算全年收入、五险一金、专项扣除、个税和年终奖方案。</p>
+        <div class="tool-action"><span>打开计算器</span><span aria-hidden="true">→</span></div>
+      </a>
+    </div>
+    <p class="coming">更多实用工具将陆续加入。</p>
+  </section>
 </main>
 
-<footer>
-  本工具依据现行个人所得税法及累计预扣法计算，结果仅供参考，实际以税务机关核定为准。政策依据：
-  <a href="https://www.chinatax.gov.cn/chinatax/n810219/n810780/c5211283/content.html" target="_blank" rel="noopener">全年一次性奖金个税政策公告</a>。
-</footer>
-
-<script>
-(function () {
-  "use strict";
-
-  // ---------- 税率表 ----------
-  // 月度税率表（年终奖单独计税：按 年终奖/12 确定税率）
-  const MONTHLY_BRACKETS = [
-    { max: 3000,  rate: 0.03, quick: 0 },
-    { max: 12000, rate: 0.10, quick: 210 },
-    { max: 25000, rate: 0.20, quick: 1410 },
-    { max: 35000, rate: 0.25, quick: 2660 },
-    { max: 55000, rate: 0.30, quick: 4410 },
-    { max: 80000, rate: 0.35, quick: 7160 },
-    { max: Infinity, rate: 0.45, quick: 15160 },
-  ];
-  // 年度税率表（综合所得）
-  const ANNUAL_BRACKETS = [
-    { max: 36000,  rate: 0.03, quick: 0 },
-    { max: 144000, rate: 0.10, quick: 2520 },
-    { max: 300000, rate: 0.20, quick: 16920 },
-    { max: 420000, rate: 0.25, quick: 31920 },
-    { max: 660000, rate: 0.30, quick: 52920 },
-    { max: 960000, rate: 0.35, quick: 85920 },
-    { max: Infinity, rate: 0.45, quick: 181920 },
-  ];
-
-  // 五险一金个人比例（工伤、生育个人不缴费）
-  const SI_RATES = { pension: 0.08, medical: 0.02, unemployment: 0.005 };
-
-  const $ = (id) => document.getElementById(id);
-  const num = (id) => { const v = parseFloat($(id).value); return isNaN(v) || v < 0 ? 0 : v; };
-
-  function taxByBrackets(amount, brackets) {
-    if (amount <= 0) return 0;
-    for (const b of brackets) if (amount <= b.max) return amount * b.rate - b.quick;
-    return 0;
-  }
-  function separateBonusTax(bonus) {
-    if (bonus <= 0) return 0;
-    const monthly = bonus / 12;
-    const b = MONTHLY_BRACKETS.find((x) => monthly <= x.max);
-    return Math.max(0, bonus * b.rate - b.quick);
-  }
-  function monthlySI(base, housingRate) {
-    return base * (SI_RATES.pension + SI_RATES.medical + SI_RATES.unemployment) + base * housingRate;
-  }
-
-  const fmt = (n) =>
-    n.toLocaleString("zh-CN", { maximumFractionDigits: 0 });
-  const fmt2 = (n) =>
-    n.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const signed = (n) => (n >= 0 ? fmt(n) : "-" + fmt(Math.abs(n)));
-
-  // ---------- 专项附加扣除（选项式 + 二级细分） ----------
-  const DEDUCTION_ITEMS = [
-    {
-      id: "infant", name: "3岁以下婴幼儿照护", type: "count", per: 2000, unit: "元/月/孩",
-      hint: "照护 3 岁以下婴幼儿子女，每个婴幼儿每月 2000 元（2023 年起由 1000 元提高），可由父母一方 100% 或双方各 50% 扣除。",
-      sub: { label: "婴幼儿数量", min: 1, max: 5 },
-    },
-    {
-      id: "childEdu", name: "子女教育", type: "count", per: 2000, unit: "元/月/孩",
-      hint: "子女满 3 周岁至小学入学前，以及全日制学历教育阶段（小学至博士），每个子女每月 2000 元。",
-      sub: { label: "子女数量", min: 1, max: 5 },
-    },
-    {
-      id: "continueEdu", name: "继续教育", type: "radio",
-      hint: "本人接受继续教育期间，或取得职业资格证书当年可享受。",
-      options: [
-        { label: "学历（学位）继续教育", amount: 400, unit: "元/月", desc: "本人接受学历（学位）继续教育期间，最长可扣 48 个月。" },
-        { label: "职业资格继续教育", amount: 300, unit: "元/月", desc: "取得技能人员/专业技术人员职业资格证书当年按 3600 元/年扣除，约合 300 元/月。" },
-      ],
-    },
-    {
-      id: "loan", name: "住房贷款利息", type: "fixed", amount: 1000, unit: "元/月",
-      hint: "本人或配偶的首套住房贷款利息，最长 240 个月（20 年）。与「住房租金」不可同时享受。",
-    },
-    {
-      id: "rent", name: "住房租金", type: "radio",
-      hint: "在主要工作城市没有自有住房而发生的住房租金。与「住房贷款利息」不可同时享受。",
-      options: [
-        { label: "直辖市 / 省会 / 计划单列市", amount: 1500, unit: "元/月", desc: "直辖市、省会（首府）城市、计划单列市及国务院确定的其他城市。" },
-        { label: "人口超 100 万的城市", amount: 1100, unit: "元/月", desc: "市辖区户籍人口超过 100 万的城市。" },
-        { label: "人口不超 100 万的城市", amount: 800, unit: "元/月", desc: "市辖区户籍人口不超过 100 万的城市。" },
-      ],
-    },
-    {
-      id: "elderly", name: "赡养老人", type: "radio",
-      hint: "赡养年满 60 周岁的父母，或子女均已去世的年满 60 周岁的祖父母、外祖父母。",
-      options: [
-        { label: "独生子女", amount: 3000, unit: "元/月", desc: "每月 3000 元（2023 年起由 2000 元提高）。" },
-        { label: "非独生子女", amount: 1500, unit: "元/月", desc: "与兄弟姐妹分摊，每人分摊额度不超过 1500 元/月。" },
-      ],
-    },
-    {
-      id: "medical", name: "大病医疗", type: "annual", unit: "元/年",
-      hint: "本人、配偶及未成年子女的医药费用，医保目录内个人自付累计超过 15000 元的部分，在 80000 元限额内据实扣除。次年汇算清缴时享受，此处按年度金额折算到每月。",
-    },
-  ];
-
-  const defaultDeductionState = () => ({
-    infant: { enabled: false, count: 1 },
-    childEdu: { enabled: false, count: 1 },
-    continueEdu: { enabled: false, opt: 0 },
-    loan: { enabled: false },
-    rent: { enabled: false, opt: 0 },
-    elderly: { enabled: false, opt: 0 },
-    medical: { enabled: false, annual: 0 },
-  });
-
-  let deductionState = defaultDeductionState();
-  let dedBodyOpen = new Set();
-
-  function deductionMonthlyAmount(item, st) {
-    if (!st.enabled) return 0;
-    switch (item.type) {
-      case "count": return item.per * (st.count || 1);
-      case "radio": return item.options[st.opt || 0].amount;
-      case "fixed": return item.amount;
-      case "annual": return (st.annual || 0) / 12;
-      default: return 0;
-    }
-  }
-
-  function computeDeduction() {
-    return DEDUCTION_ITEMS.reduce((sum, item) => sum + deductionMonthlyAmount(item, deductionState[item.id]), 0);
-  }
-
-  function renderDeductionBody(item, st) {
-    let html = '<div class="ded-hint">' + item.hint + "</div>";
-    if (item.type === "count") {
-      html += '<div class="ded-sub">' +
-        '<span class="ded-sub-label">' + item.sub.label + '：</span>' +
-        '<select data-opt="' + item.id + '">' +
-        Array.from({ length: item.sub.max }, (_, i) =>
-          '<option value="' + (i + 1) + '"' + (st.count === i + 1 ? " selected" : "") + ">" + (i + 1) + " 个</option>").join("") +
-        '</select>' +
-        '<span class="ded-calc">' + item.per + " × " + (st.count || 1) + " = ¥" + fmt(deductionMonthlyAmount(item, st)) + "/月</span>" +
-        '</div>';
-    } else if (item.type === "radio") {
-      html += '<div class="ded-sub" style="flex-direction:column;align-items:stretch">';
-      item.options.forEach((o, i) => {
-        html += '<label class="ded-opt' + (st.opt === i ? " selected" : "") + '">' +
-          '<input type="radio" name="ded-' + item.id + '" value="' + i + '"' + (st.opt === i ? " checked" : "") + '>' +
-          '<span class="o-label">' + o.label + '</span>' +
-          '<span class="o-amount">' + o.amount + " " + o.unit + '</span>' +
-          '<span class="o-desc">' + o.desc + '</span>' +
-          '</label>';
-      });
-      html += '</div>';
-    } else if (item.type === "fixed") {
-      html += '<div class="ded-sub"><span class="ded-calc">固定 ' + item.amount + " " + item.unit + "（首套住房贷款利息）</span></div>";
-    } else if (item.type === "annual") {
-      html += '<div class="ded-sub">' +
-        '<span class="ded-sub-label">年度可扣除金额（元）：</span>' +
-        '<input type="number" data-annual="' + item.id + '" min="0" max="80000" step="1000" value="' + (st.annual || 0) + '">' +
-        '<span class="ded-calc">折合 ¥' + fmt((st.annual || 0) / 12) + '/月</span>' +
-        '</div>';
-    }
-    return html;
-  }
-
-  function renderDeductions() {
-    const list = $("deductionList");
-    list.innerHTML = "";
-    DEDUCTION_ITEMS.forEach((item) => {
-      const st = deductionState[item.id];
-      const amount = deductionMonthlyAmount(item, st);
-      const open = dedBodyOpen.has(item.id) || st.enabled;
-      const el = document.createElement("div");
-      el.className = "ded-item" + (st.enabled ? " enabled" : "");
-      el.innerHTML =
-        '<div class="ded-head">' +
-          '<input type="checkbox" class="ded-cb" data-check="' + item.id + '"' + (st.enabled ? " checked" : "") + '>' +
-          '<span class="name" data-toggle="' + item.id + '">' + item.name + '</span>' +
-          '<span class="ded-amount">' + (st.enabled ? "¥" + fmt(amount) + "/月" : "") + '</span>' +
-          '<span class="chev" data-toggle="' + item.id + '">' + (open ? "▴" : "▾") + '</span>' +
-        '</div>' +
-        '<div class="ded-body"' + (open ? "" : " hidden") + '>' + renderDeductionBody(item, st) + '</div>';
-      list.appendChild(el);
-    });
-    $("dedTotal").textContent = "¥" + fmt(computeDeduction());
-  }
-
-  function effectiveBonus() {
-    const type = document.querySelector('input[name="bonusType"]:checked').value;
-    if (type === "months") return num("bonusMonths") * num("base");
-    return num("bonus");
-  }
-
-  function personalPensionAmount() {
-    if (!$("pensionEnabled").checked) return 0;
-    return Math.min(num("pensionAmount"), 12000);
-  }
-
-  function syncBonusAndPensionUI() {
-    const type = document.querySelector('input[name="bonusType"]:checked').value;
-    $("bonusAmountField").hidden = type !== "amount";
-    $("bonusMonthsField").hidden = type !== "months";
-    document.querySelectorAll(".bt-opt").forEach((c) =>
-      c.classList.toggle("selected", c.querySelector("input").checked));
-    const b = effectiveBonus();
-    $("bonusHint").textContent = type === "months"
-      ? "当前年终奖 = " + (num("bonusMonths") || 0) + " 个月 × 基本工资 ¥" + fmt(num("base")) + " = ¥" + fmt(b)
-      : "当前年终奖 = ¥" + fmt(b);
-    $("pensionAmountWrap").hidden = !$("pensionEnabled").checked;
-  }
-
-  // ---------- 读取输入 ----------
-  function readInputs() {
-    return {
-      base: num("base"),
-      housingPct: num("housingPct") / 100,
-      specialDeduction: computeDeduction(),
-      subsidy: num("subsidy"),
-      stock: num("stock"),
-      stockMonth: parseInt($("stockMonth").value, 10),
-      bonus: effectiveBonus(),
-      bonusMonth: parseInt($("bonusMonth").value, 10),
-      personalPension: personalPensionAmount(),
-      housingWithdraw: num("housingWithdraw"),
-      fixedConsumption: num("fixedConsumption"),
-      extras: readExtras(),
-    };
-  }
-
-  function readExtras() {
-    const rows = document.querySelectorAll("#extraList .extra-row");
-    const out = [];
-    rows.forEach((r) => {
-      const m = parseInt(r.querySelector("select").value, 10);
-      const amt = parseFloat(r.querySelector("input").value);
-      if (!isNaN(amt) && amt > 0) out.push({ month: m, amount: amt });
-    });
-    return out;
-  }
-
-  function extraForMonth(extras, month) {
-    return extras.filter((e) => e.month === month).reduce((s, e) => s + e.amount, 0);
-  }
-
-  function getSplit(bonus) {
-    const mode = document.querySelector('input[name="bonusMode"]:checked').value;
-    let separate = 0, merged = 0;
-    if (mode === "separate") { separate = bonus; }
-    else if (mode === "merged") { merged = bonus; }
-    else {
-      separate = Math.min(Math.max(0, num("separateAmount")), bonus);
-      merged = bonus - separate;
-    }
-    return { mode, separate, merged };
-  }
-
-  // ---------- 核心计算 ----------
-  function compute(inputs, split) {
-    const monthlySIVal = monthlySI(inputs.base, inputs.housingPct);
-    const monthlySalary = inputs.base + inputs.subsidy;
-
-    // 年度综合所得（不含年终奖）的应纳税所得额
-    const annualIncomeNoBonus = monthlySalary * 12 + inputs.stock;
-    const annualDeduction = (5000 + monthlySIVal + inputs.specialDeduction) * 12 + inputs.personalPension;
-    const otherTaxable = annualIncomeNoBonus - annualDeduction; // 可能为负
-
-    const comprehensiveTaxable = Math.max(0, otherTaxable + split.merged);
-    const comprehensiveTax = taxByBrackets(comprehensiveTaxable, ANNUAL_BRACKETS);
-    const sepTax = separateBonusTax(split.separate);
-    const totalTax = comprehensiveTax + sepTax;
-
-    const annualIncome = annualIncomeNoBonus + inputs.bonus;
-    const annualSI = monthlySIVal * 12;
-    const afterTax = annualIncome - annualSI - totalTax;
-    // 个人账户拆解：养老个人账户 8%、医疗个人账户 2%、公积金个人+单位各按系数
-    const annualPensionAccount = inputs.base * 0.08 * 12;
-    const annualMedicalAccount = inputs.base * 0.02 * 12;
-    const annualHousingAccount = inputs.base * inputs.housingPct * 2 * 12;
-    const annualWithdrawal = inputs.housingWithdraw * 12;
-    const annualConsumption = inputs.fixedConsumption * 12 +
-      inputs.extras.reduce((s, e) => s + e.amount, 0);
-    const net = afterTax + annualWithdrawal - annualConsumption;
-
-    // 逐月（年终奖并入发放月展示；计税时仍按所选方案区分合并与单独部分）
-    const months = [];
-    let cumIncome = 0, cumDeduction = 0, cumTax = 0;
-    for (let m = 1; m <= 12; m++) {
-      let comprehensiveIncome = monthlySalary;
-      if (m === inputs.stockMonth) comprehensiveIncome += inputs.stock;
-      if (m === inputs.bonusMonth) comprehensiveIncome += split.merged;
-
-      let income = monthlySalary;
-      if (m === inputs.stockMonth) income += inputs.stock;
-      if (m === inputs.bonusMonth) income += inputs.bonus;
-
-      const deduction = 5000 + monthlySIVal + inputs.specialDeduction + inputs.personalPension / 12;
-      cumIncome += comprehensiveIncome;
-      cumDeduction += deduction;
-      const taxable = Math.max(0, cumIncome - cumDeduction);
-      const thisCumTax = taxByBrackets(taxable, ANNUAL_BRACKETS);
-      const comprehensiveMonthTax = thisCumTax - cumTax;
-      cumTax = thisCumTax;
-      const separateMonthTax = m === inputs.bonusMonth ? sepTax : 0;
-      const monthTax = comprehensiveMonthTax + separateMonthTax;
-
-      const consumption = inputs.fixedConsumption + extraForMonth(inputs.extras, m);
-      const afterTaxM = income - monthlySIVal - monthTax;
-
-      months.push({
-        month: m,
-        income, monthlySIVal, specialDeduction: inputs.specialDeduction,
-        pensionMonthly: inputs.personalPension / 12,
-        basicDeduction: 5000, taxable, monthTax,
-        housingWithdraw: inputs.housingWithdraw,
-        afterTax: afterTaxM, consumption, net: afterTaxM + inputs.housingWithdraw - consumption,
-      });
-    }
-
-    return {
-      monthlySIVal, otherTaxable, comprehensiveTaxable, comprehensiveTax,
-      sepTax, totalTax, annualIncome, annualSI, afterTax, annualConsumption, net, months,
-      personalPension: inputs.personalPension,
-      annualPensionAccount, annualMedicalAccount, annualHousingAccount, annualWithdrawal,
-    };
-  }
-
-  // ---------- 年终奖最优拆分 ----------
-  function optimizeBonus(bonus, otherTaxable) {
-    if (bonus <= 0) return { separate: 0, merged: 0, total: taxByBrackets(Math.max(0, otherTaxable), ANNUAL_BRACKETS) };
-    const step = bonus > 1000000 ? 1000 : 100;
-    let best = { separate: 0, merged: bonus, total: Infinity };
-    for (let s = 0; s <= bonus + 0.001; s += step) {
-      const m = bonus - s;
-      const t = separateBonusTax(s) + taxByBrackets(Math.max(0, otherTaxable + m), ANNUAL_BRACKETS);
-      if (t < best.total) best = { separate: s, merged: m, total: t };
-    }
-    // 微调：在最优邻域用更细步长再搜一次
-    const lo = Math.max(0, best.separate - step), hi = Math.min(bonus, best.separate + step);
-    let refined = { separate: best.separate, merged: best.merged, total: best.total };
-    for (let s = lo; s <= hi + 0.001; s += 1) {
-      const m = bonus - s;
-      const t = separateBonusTax(s) + taxByBrackets(Math.max(0, otherTaxable + m), ANNUAL_BRACKETS);
-      if (t < refined.total) refined = { separate: s, merged: m, total: t };
-    }
-    return refined;
-  }
-
-  // ---------- 渲染 ----------
-  function render() {
-    syncBonusAndPensionUI();
-    const inputs = readInputs();
-    const split = getSplit(inputs.bonus);
-    const r = compute(inputs, split);
-    const opt = optimizeBonus(inputs.bonus, r.otherTaxable);
-
-    // 三种方案的总税负（用于对比卡片）
-    const taxAllSeparate = taxByBrackets(Math.max(0, r.otherTaxable), ANNUAL_BRACKETS) + separateBonusTax(inputs.bonus);
-    const taxAllMerged = taxByBrackets(Math.max(0, r.otherTaxable + inputs.bonus), ANNUAL_BRACKETS);
-    const taxMixed = opt.total;
-
-    // 年终奖对比卡片
-    $("tax-separate").textContent = "总税负 ¥" + fmt(taxAllSeparate);
-    $("tax-merged").textContent = "总税负 ¥" + fmt(taxAllMerged);
-    $("tax-mixed").textContent = "总税负 ¥" + fmt(taxMixed);
-
-    // 推荐拆分值填入（仅当用户选择混合且尚未手动改时）
-    if (split.mode === "mixed" && !window._userEditedSplit) {
-      $("separateAmount").value = Math.round(opt.separate);
-    }
-    $("mergedAmount").textContent = fmt(split.merged);
-
-    // 年终奖拆分条
-    const sepBar = inputs.bonus > 0 ? (split.separate / inputs.bonus) * 100 : 0;
-    $("bonusBar").innerHTML =
-      '<span style="width:' + sepBar + '%;background:#2563eb"></span>' +
-      '<span style="width:' + (100 - sepBar) + '%;background:#93c5fd"></span>';
-
-    // 方案税负拆解
-    $("bd-sep-comp").textContent = "¥" + fmt(taxByBrackets(Math.max(0, r.otherTaxable), ANNUAL_BRACKETS));
-    $("bd-sep-bonus").textContent = "¥" + fmt(separateBonusTax(inputs.bonus));
-    $("bd-sep-total").textContent = "¥" + fmt(taxAllSeparate);
-    $("bd-mer-comp").textContent = "¥" + fmt(taxAllMerged);
-    $("bd-mer-bonus").textContent = "¥0";
-    $("bd-mer-total").textContent = "¥" + fmt(taxAllMerged);
-    $("bd-mix-comp").textContent = "¥" + fmt(taxByBrackets(Math.max(0, r.otherTaxable + opt.merged), ANNUAL_BRACKETS));
-    $("bd-mix-bonus").textContent = "¥" + fmt(separateBonusTax(opt.separate));
-    $("bd-mix-total").textContent = "¥" + fmt(taxMixed);
-
-    // 年度概览 KPI
-    const effRate = r.annualIncome > 0 ? (r.totalTax / r.annualIncome) * 100 : 0;
-    $("kpis").innerHTML =
-      kpi("全年税前收入", "¥" + fmt(r.annualIncome), "含工资/补贴/股票/年终奖") +
-      kpi("全年税后收入", "¥" + fmt(r.afterTax), "税前 − 五险一金 − 个税", "green") +
-      kpi("全年个税", "¥" + fmt(r.totalTax), "综合所得 + 年终奖", "red") +
-      kpi("全年公积金（含单位）", "¥" + fmt(r.annualHousingAccount), "个人+单位缴存，全年提取 ¥" + fmt(r.annualWithdrawal)) +
-      kpi("全年养老金个人账户", "¥" + fmt(r.annualPensionAccount), "社保个人缴存 8%") +
-      kpi("全年医疗保险个人账户", "¥" + fmt(r.annualMedicalAccount), "社保个人缴存 2%") +
-      kpi("全年个人养老金", "¥" + fmt(r.personalPension), "自愿缴存，税前扣除，最高1.2万/年") +
-      kpi("全年消费支出", "¥" + fmt(r.annualConsumption), "固定 + 额外开支") +
-      kpi("全年净结余", "¥" + fmt(r.net), "税后收入 + 公积金提取 − 消费", r.net >= 0 ? "green" : "red") +
-      kpi("实际税负率", effRate.toFixed(2) + "%", "个税 / 税前收入", "hl");
-
-    // 年度收入构成条
-    const parts = [
-      { label: "税后", v: Math.max(0, r.afterTax), c: "#16a34a" },
-      { label: "个税", v: Math.max(0, r.totalTax), c: "#2563eb" },
-      { label: "五险一金", v: Math.max(0, r.annualSI), c: "#f59e0b" },
-      { label: "消费", v: Math.max(0, r.annualConsumption), c: "#9ca3af" },
-    ];
-    const sum = parts.reduce((s, p) => s + p.v, 0) || 1;
-    $("annualBar").innerHTML = parts.map((p) =>
-      '<span style="width:' + (p.v / sum * 100) + '%;background:' + p.c + '"></span>').join("");
-
-    // 月度明细表
-    renderMonthly(r, inputs, split);
-
-    // 保存到 localStorage
-    saveState();
-  }
-
-  function kpi(label, value, sub, cls) {
-    return '<div class="kpi ' + (cls || "") + '">' +
-      '<div class="k-label">' + label + '</div>' +
-      '<div class="k-value">' + value + '</div>' +
-      '<div class="k-sub">' + sub + '</div>' +
-      '</div>';
-  }
-
-  function renderMonthly(r, inputs, split) {
-    const tbody = document.querySelector("#monthlyTable tbody");
-    let html = "";
-    r.months.forEach((m) => {
-      const extra = extraForMonth(inputs.extras, m.month);
-      const hasBonus = inputs.bonus > 0 && m.month === inputs.bonusMonth;
-      const taxableNote = !hasBonus ? "" :
-        split.separate > 0 && split.merged > 0 ? "<br><span class='taxable-note'>仅含并入部分</span>" :
-        split.separate > 0 ? "<br><span class='taxable-note'>年终奖另计，未计入</span>" :
-        "<br><span class='taxable-note'>已含并入年终奖</span>";
-      html += "<tr>" +
-        "<td>" + m.month + " 月</td>" +
-        "<td>" + (hasBonus ? "<span class='tag-pill bonus'>含年终奖</span> " : "") + "¥" + fmt(m.income) + "</td>" +
-        "<td>¥" + fmt(m.monthlySIVal) + "</td>" +
-        "<td>¥" + fmt(m.specialDeduction) + "</td>" +
-        "<td>¥" + fmt(m.pensionMonthly) + "</td>" +
-        "<td>¥" + fmt(m.basicDeduction) + "</td>" +
-        "<td>¥" + fmt(m.taxable) + taxableNote + "</td>" +
-        "<td>¥" + fmt(m.monthTax) + "</td>" +
-        "<td>¥" + fmt(m.afterTax) + "</td>" +
-        "<td>¥" + fmt(m.housingWithdraw) + "</td>" +
-        "<td>¥" + fmt(m.consumption) + (extra > 0 ? " <span class='tag-pill rec'>含额外</span>" : "") + "</td>" +
-        "<td class='" + (m.net >= 0 ? "pos" : "neg") + "'>¥" + signed(m.net) + "</td>" +
-        "</tr>";
-    });
-
-    // 全年合计
-    const all = r.months;
-    const sum = (f) => all.reduce((s, m) => s + f(m), 0);
-    const annualTaxableNote = inputs.bonus <= 0 ? "" :
-      split.separate > 0 && split.merged > 0
-        ? "<br><span class='taxable-note'>已含并入年终奖 ¥" + fmt(split.merged) + "；另计 ¥" + fmt(split.separate) + "</span>"
-        : split.separate > 0
-          ? "<br><span class='taxable-note'>另：单独计税年终奖 ¥" + fmt(split.separate) + "</span>"
-          : "<br><span class='taxable-note'>已含并入年终奖 ¥" + fmt(split.merged) + "</span>";
-    html += "<tr class='row-total'>" +
-      "<td>全年合计</td>" +
-      "<td>¥" + fmt(sum((m) => m.income)) + "</td>" +
-      "<td>¥" + fmt(sum((m) => m.monthlySIVal)) + "</td>" +
-      "<td>¥" + fmt(sum((m) => m.specialDeduction)) + "</td>" +
-      "<td>¥" + fmt(sum((m) => m.pensionMonthly)) + "</td>" +
-      "<td>¥" + fmt(sum((m) => m.basicDeduction)) + "</td>" +
-      "<td>¥" + fmt(r.comprehensiveTaxable) + annualTaxableNote + "</td>" +
-      "<td>¥" + fmt(sum((m) => m.monthTax)) + "</td>" +
-      "<td>¥" + fmt(sum((m) => m.afterTax)) + "</td>" +
-      "<td>¥" + fmt(sum((m) => m.housingWithdraw)) + "</td>" +
-      "<td>¥" + fmt(sum((m) => m.consumption)) + "</td>" +
-      "<td class='" + (sum((m) => m.net) >= 0 ? "pos" : "neg") + "'>¥" + signed(sum((m) => m.net)) + "</td>" +
-      "</tr>";
-    tbody.innerHTML = html;
-  }
-
-  // ---------- 额外开支行 ----------
-  function addExtraRow(month, amount) {
-    const list = $("extraList");
-    const row = document.createElement("div");
-    row.className = "extra-row";
-    row.innerHTML =
-      '<select>' +
-      Array.from({ length: 12 }, (_, i) =>
-        '<option value="' + (i + 1) + '"' + (i + 1 === month ? " selected" : "") + ">" + (i + 1) + " 月</option>").join("") +
-      '</select>' +
-      '<input type="number" min="0" step="100" placeholder="金额（元）" value="' + (amount || "") + '">' +
-      '<button class="btn danger" type="button" title="删除">✕</button>';
-    list.appendChild(row);
-    row.querySelector(".danger").addEventListener("click", () => { row.remove(); render(); });
-    row.querySelector("select").addEventListener("change", render);
-    row.querySelector("input").addEventListener("input", render);
-  }
-
-  // ---------- 状态保存 / 恢复 ----------
-  function saveState() {
-    const data = {
-      base: $("base").value, housingPct: $("housingPct").value,
-      deductions: deductionState, subsidy: $("subsidy").value,
-      stock: $("stock").value, stockMonth: $("stockMonth").value, bonus: $("bonus").value, bonusMonth: $("bonusMonth").value,
-      bonusType: document.querySelector('input[name="bonusType"]:checked').value,
-      bonusMonths: $("bonusMonths").value,
-      pensionEnabled: $("pensionEnabled").checked, pensionAmount: $("pensionAmount").value,
-      housingWithdraw: $("housingWithdraw").value,
-      fixedConsumption: $("fixedConsumption").value,
-      bonusMode: document.querySelector('input[name="bonusMode"]:checked').value,
-      separateAmount: $("separateAmount").value,
-      extras: readExtras(),
-    };
-    try { localStorage.setItem("salaryCalc", JSON.stringify(data)); } catch (e) {}
-  }
-
-  function restoreState() {
-    let data = null;
-    try { data = JSON.parse(localStorage.getItem("salaryCalc")); } catch (e) {}
-    if (!data) return;
-    const set = (id, v) => { if (v !== undefined && v !== null) $(id).value = v; };
-    set("base", data.base); set("housingPct", data.housingPct);
-    set("subsidy", data.subsidy);
-    if (data.deductions) deductionState = Object.assign(defaultDeductionState(), data.deductions);
-    set("stock", data.stock); set("stockMonth", data.stockMonth);
-    set("bonus", data.bonus); set("bonusMonth", data.bonusMonth); set("bonusMonths", data.bonusMonths);
-    if (data.bonusType) {
-      const r = document.querySelector('input[name="bonusType"][value="' + data.bonusType + '"]');
-      if (r) r.checked = true;
-    }
-    if (data.pensionEnabled !== undefined) $("pensionEnabled").checked = !!data.pensionEnabled;
-    set("pensionAmount", data.pensionAmount);
-    set("housingWithdraw", data.housingWithdraw);
-    set("fixedConsumption", data.fixedConsumption);
-    set("separateAmount", data.separateAmount);
-    if (data.bonusMode) {
-      const r = document.querySelector('input[name="bonusMode"][value="' + data.bonusMode + '"]');
-      if (r) r.checked = true;
-    }
-    $("extraList").innerHTML = "";
-    (data.extras || []).forEach((e) => addExtraRow(e.month, e.amount));
-  }
-
-  // ---------- 事件绑定 ----------
-  function bind() {
-    document.querySelectorAll("input, select").forEach((el) => {
-      el.addEventListener("input", () => { if (el.id === "separateAmount") window._userEditedSplit = true; render(); });
-      el.addEventListener("change", () => { render(); });
-    });
-
-    // 方案卡片选择
-    document.querySelectorAll('input[name="bonusMode"]').forEach((r) => {
-      r.addEventListener("change", () => {
-        window._userEditedSplit = false;
-        document.querySelectorAll(".mode-card").forEach((c) =>
-          c.classList.toggle("selected", c.querySelector("input").checked));
-        render();
-      });
-    });
-
-    $("addExtra").addEventListener("click", () => { addExtraRow(1, 0); render(); });
-
-    bindDeductions();
-  }
-
-  function bindDeductions() {
-    $("deductionList").addEventListener("change", (e) => {
-      const t = e.target;
-      if (t.dataset.check) {
-        const id = t.dataset.check;
-        deductionState[id].enabled = t.checked;
-        if (id === "loan" && t.checked) deductionState.rent.enabled = false;
-        if (id === "rent" && t.checked) deductionState.loan.enabled = false;
-        if (t.checked) dedBodyOpen.add(id);
-        renderDeductions(); render(); return;
-      }
-      if (t.dataset.opt) {
-        deductionState[t.dataset.opt].count = parseInt(t.value, 10);
-        renderDeductions(); render(); return;
-      }
-      if (t.name && t.name.indexOf("ded-") === 0) {
-        deductionState[t.name.slice(4)].opt = parseInt(t.value, 10);
-        renderDeductions(); render(); return;
-      }
-      if (t.dataset.annual) {
-        const v = parseFloat(t.value);
-        deductionState[t.dataset.annual].annual = isNaN(v) || v < 0 ? 0 : Math.min(v, 80000);
-        renderDeductions(); render(); return;
-      }
-    });
-    $("deductionList").addEventListener("click", (e) => {
-      const tg = e.target.closest("[data-toggle]");
-      if (!tg) return;
-      const id = tg.dataset.toggle;
-      if (dedBodyOpen.has(id)) dedBodyOpen.delete(id); else dedBodyOpen.add(id);
-      renderDeductions();
-    });
-  }
-
-  // ---------- 初始化 ----------
-  restoreState();
-  bind();
-  renderDeductions();
-  // 同步已选中方案卡片样式
-  document.querySelectorAll(".mode-card").forEach((c) =>
-    c.classList.toggle("selected", c.querySelector("input").checked));
-  render();
-})();
-</script>
+<footer>智能工具小站</footer>
 </body>
 </html>
