@@ -155,15 +155,12 @@
   .mode-card .tax { font-size: 14px; font-weight: 700; white-space: nowrap; }
   .mode-card .tag { display: inline-block; font-size: 10.5px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 999px; padding: 1px 8px; margin-left: 6px; vertical-align: 1px; }
   .bd-title { font-size: 13px; font-weight: 700; color: #374151; margin: 14px 0 8px; }
-  .bd-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 0; }
-  .bd-table th, .bd-table td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: normal; }
+  .bd-scroll { overflow-x: auto; }
+  .bd-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 720px; }
+  .bd-table th, .bd-table td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
   .bd-table th { background: #f8fafc; color: #475569; font-weight: 600; }
   .bd-table th:first-child, .bd-table td:first-child { text-align: left; }
   .bd-table tr.bd-rec td { background: var(--green-soft); font-weight: 600; color: #14532d; }
-  .split-box { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: #f8fafc; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
-  .split-box input { width: 160px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; }
-  .split-box .lbl { font-size: 13px; color: #374151; font-weight: 600; }
-  .split-box .out { font-size: 13px; color: var(--muted); }
 
   /* summary cards */
   .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
@@ -209,7 +206,9 @@
   .tag-pill { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 1px 8px; }
   .tag-pill.rec { background: var(--green-soft); color: var(--green); }
   .tag-pill.bonus { background: var(--accent-soft); color: var(--accent); }
+  .tag-pill.stock { background: #f3e8ff; color: #7e22ce; }
   .taxable-note { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .field-note.error { color: var(--red); }
 
   footer { text-align: center; color: var(--muted); font-size: 12px; padding: 10px 16px 40px; }
   footer a { color: var(--accent); text-decoration: none; }
@@ -230,7 +229,19 @@
     <!-- ===================== 收入与扣除 ===================== -->
     <section class="card col-7">
       <h2>① 收入与扣除设置 <span class="badge">按月</span></h2>
-      <p class="sub">填写税前月工资、公积金与专项扣除等信息</p>
+      <p class="sub">填写入职日期、税前月工资、公积金与专项扣除等信息</p>
+
+      <div class="row2">
+        <div class="field">
+          <label>入职日期 <span class="hint">（计算起点）</span></label>
+          <div class="input-wrap"><input type="date" id="joinDate"></div>
+        </div>
+        <div class="field">
+          <label>计算截止日期</label>
+          <div class="input-wrap"><input type="date" id="endDate"></div>
+        </div>
+      </div>
+      <div class="field-note" id="employmentHint" style="margin-top:-8px;margin-bottom:14px"></div>
 
       <div class="row2">
         <div class="field">
@@ -271,13 +282,24 @@
         <div class="input-wrap"><input type="number" id="subsidy" value="0" min="0" step="100"><span class="suffix">元</span></div>
       </div>
 
+      <div class="field">
+        <label>股票 / 股权激励类别</label>
+        <div class="input-wrap">
+          <select id="stockType">
+            <option value="ordinary" selected>普通股票或现金激励（并入综合所得）</option>
+            <option value="listed_stock">上市公司股票 / RSU / 限制性股票（单独计税）</option>
+            <option value="listed_option">上市公司股票期权 / 增值权（单独计税）</option>
+            <option value="deferred">非上市公司股权 / 期权（符合条件时递延纳税）</option>
+          </select>
+        </div>
+      </div>
       <div class="row2">
         <div class="field">
-          <label>股票 / 股权激励（元/年）</label>
+          <label id="stockAmountLabel">股票 / 股权激励（元/年）</label>
           <div class="input-wrap"><input type="number" id="stock" value="0" min="0" step="1000"><span class="suffix">元</span></div>
         </div>
         <div class="field">
-          <label>股票发放月份</label>
+          <label id="stockMonthLabel">股票发放月份</label>
           <div class="input-wrap">
             <select id="stockMonth">
               <option value="1">1 月</option><option value="2">2 月</option><option value="3">3 月</option>
@@ -288,6 +310,7 @@
           </div>
         </div>
       </div>
+      <div class="field-note" id="stockHint" style="margin-top:-8px;margin-bottom:14px"></div>
 
       <div class="field">
         <label>年终奖 <span class="hint">（按金额或按 N 个月工资）</span></label>
@@ -316,11 +339,18 @@
             </div>
           </div>
         </div>
-        <div class="field-note" id="bonusHint">当前年终奖 = ¥30,000</div>
+        <div class="field" style="margin-top:10px">
+          <div class="mini-label">年终奖时间系数口径</div>
+          <div class="bonus-type-switch">
+            <label class="bt-opt selected"><input type="radio" name="bonusProrationBasis" value="previous_year" checked>上一自然年度（1–12月）</label>
+            <label class="bt-opt"><input type="radio" name="bonusProrationBasis" value="trailing_12">发奖月前12个月</label>
+          </div>
+        </div>
+        <div class="field-note" id="bonusHint">本年预计年终奖 = ¥30,000</div>
       </div>
 
       <div class="note">
-        <b>计算假设：</b>五险一金个人部分按 养老 8% + 医疗 2% + 失业 0.5% + 公积金（按系数）计算，缴费基数取基本工资，未考虑各地社保基数上下限（如需可在基本工资中近似）。股票与年终奖并入当月收入后不重复缴纳五险一金。
+        <b>计算假设：</b>起止月份按自然日在职天数折算工资及五险一金；股票按设置的月份每年发放，并按所选类别决定合并、单独或递延计税；年终奖仅计入所选范围内最近一次发放，并按所选参考期内的实际在职天数折算。五险一金个人部分按 养老 8% + 医疗 2% + 失业 0.5% + 公积金（按系数）计算，缴费基数取基本工资，未考虑各地社保基数上下限。股票与年终奖不重复缴纳五险一金。
       </div>
     </section>
 
@@ -349,20 +379,14 @@
         <label class="mode-card" data-mode="mixed">
           <input type="radio" name="bonusMode" value="mixed" checked>
           <div class="mc-main">
-            <div class="tt">混合计税 <span class="tag">推荐</span></div>
-            <div class="ds">部分单独 + 部分合并，税负最低</div>
+            <div class="tt">混合计税 <span class="tag">规划测算</span></div>
+            <div class="ds">自动计算部分单独、部分合并的最低税负组合</div>
           </div>
           <div class="tax" id="tax-mixed">—</div>
         </label>
       </div>
 
-      <div class="split-box">
-        <span class="lbl">单独计税金额</span>
-        <input type="number" id="separateAmount" value="0" min="0" step="100">
-        <span class="out">剩余 <b id="mergedAmount">0</b> 元并入综合所得</span>
-      </div>
-
-      <div class="bar-wrap" style="margin-top:16px">
+      <div class="bar-wrap">
         <div class="bar" id="bonusBar"></div>
         <div class="legend">
           <span><i style="background:#2563eb"></i>单独计税部分</span>
@@ -371,19 +395,23 @@
       </div>
 
       <div class="bd-title">方案税负拆解</div>
-      <table class="bd-table">
-        <thead>
-          <tr><th>方案</th><th>综合所得税</th><th>年终奖单独税</th><th>个税合计</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>全部单独</td><td id="bd-sep-comp">—</td><td id="bd-sep-bonus">—</td><td id="bd-sep-total">—</td></tr>
-          <tr><td>全部合并</td><td id="bd-mer-comp">—</td><td id="bd-mer-bonus">—</td><td id="bd-mer-total">—</td></tr>
-          <tr class="bd-rec"><td>混合（推荐）</td><td id="bd-mix-comp">—</td><td id="bd-mix-bonus">—</td><td id="bd-mix-total">—</td></tr>
-        </tbody>
-      </table>
+      <div class="bd-scroll">
+        <table class="bd-table">
+          <thead>
+            <tr><th>方案</th><th>单独计税金额</th><th>合并计税金额</th><th>综合所得税</th><th>股权激励税</th><th>年终奖单独税</th><th>个税合计</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>全部单独</td><td id="bd-sep-amount">—</td><td id="bd-sep-merged">—</td><td id="bd-sep-comp">—</td><td id="bd-sep-stock">—</td><td id="bd-sep-bonus">—</td><td id="bd-sep-total">—</td></tr>
+            <tr><td>全部合并</td><td id="bd-mer-amount">—</td><td id="bd-mer-merged">—</td><td id="bd-mer-comp">—</td><td id="bd-mer-stock">—</td><td id="bd-mer-bonus">—</td><td id="bd-mer-total">—</td></tr>
+            <tr class="bd-rec"><td>混合（规划）</td><td id="bd-mix-amount">—</td><td id="bd-mix-merged">—</td><td id="bd-mix-comp">—</td><td id="bd-mix-stock">—</td><td id="bd-mix-bonus">—</td><td id="bd-mix-total">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="field-note">混合方案用于发放规划测算；同一笔全年一次性奖金申报时不能拆分，需整体选择单独计税或并入综合所得。</p>
 
       <p class="sub" style="margin-top:12px; margin-bottom:0">
-        年终奖单独计税政策延续至 <b>2027年12月31日</b>（财政部、税务总局公告 2023 年第 30 号）。
+        年终奖及符合条件的上市公司股权激励单独计税政策均延续至 <b>2027年12月31日</b>（财政部、税务总局公告 2023 年第 30 号、第 25 号）。
       </p>
     </section>
 
@@ -404,10 +432,10 @@
       </div>
     </section>
 
-    <!-- ===================== 年度概览 ===================== -->
+    <!-- ===================== 范围概览 ===================== -->
     <section class="card col-12">
-      <h2>④ 年度概览</h2>
-      <p class="sub">全年税前税后、个税、五险一金与消费结余</p>
+      <h2>④ 范围概览</h2>
+      <p class="sub">所选日期范围内的收入、个税、五险一金与消费汇总</p>
       <div class="kpis" id="kpis"></div>
       <div class="bar-wrap"><div class="bar" id="annualBar"></div></div>
       <div class="legend">
@@ -421,7 +449,7 @@
     <!-- ===================== 月度明细 ===================== -->
     <section class="card col-12">
       <h2>⑤ 月度明细</h2>
-      <p class="sub">按累计预扣法逐月计算；综合所得累计额不含单独计税年终奖，结余 = 税后收入 − 消费</p>
+      <p class="sub" id="monthlyRangeHint">按累计预扣法逐月计算；跨年时每年 1 月重新累计，最多展示最近 12 个月</p>
       <div class="table-scroll">
         <table id="monthlyTable">
           <thead>
@@ -432,7 +460,7 @@
               <th>专项扣除</th>
               <th>个人养老金</th>
               <th>起征点</th>
-              <th>综合所得累计应纳税所得额</th>
+              <th>当年累计应纳税所得额</th>
               <th>个税</th>
               <th>税后收入</th>
               <th>公积金提取</th>
@@ -483,6 +511,7 @@
 
   // 五险一金个人比例（工伤、生育个人不缴费）
   const SI_RATES = { pension: 0.08, medical: 0.02, unemployment: 0.005 };
+  const CALCULATION_YEAR = new Date().getFullYear();
 
   const $ = (id) => document.getElementById(id);
   const num = (id) => { const v = parseFloat($(id).value); return isNaN(v) || v < 0 ? 0 : v; };
@@ -507,6 +536,87 @@
   const fmt2 = (n) =>
     n.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const signed = (n) => (n >= 0 ? fmt(n) : "-" + fmt(Math.abs(n)));
+
+  // ---------- 计算日期范围 ----------
+  const DAY_MS = 86400000;
+
+  function daysInYear(year) {
+    return (Date.UTC(year + 1, 0, 1) - Date.UTC(year, 0, 1)) / DAY_MS;
+  }
+
+  function parseISODate(value, fallback) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+    if (!match) return fallback;
+    const date = { year: parseInt(match[1], 10), month: parseInt(match[2], 10), day: parseInt(match[3], 10) };
+    const maxDay = new Date(date.year, date.month, 0).getDate();
+    if (date.month < 1 || date.month > 12 || date.day < 1 || date.day > maxDay) return fallback;
+    return date;
+  }
+
+  function dateTime(date) {
+    return Date.UTC(date.year, date.month - 1, date.day);
+  }
+
+  function dateLabel(date) {
+    return date.year + "年" + date.month + "月" + date.day + "日";
+  }
+
+  function daysInclusive(start, end) {
+    return Math.floor((dateTime(end) - dateTime(start)) / DAY_MS) + 1;
+  }
+
+  function buildRange(startValue, endValue) {
+    const defaultStart = { year: CALCULATION_YEAR, month: 1, day: 1 };
+    const defaultEnd = { year: CALCULATION_YEAR, month: 12, day: 31 };
+    const start = parseISODate(startValue, defaultStart);
+    const end = parseISODate(endValue, defaultEnd);
+    if (dateTime(end) < dateTime(start)) return { start, end, valid: false, months: [], totalDays: 0 };
+
+    const months = [];
+    let year = start.year;
+    let month = start.month;
+    while (year < end.year || (year === end.year && month <= end.month)) {
+      const monthDays = new Date(year, month, 0).getDate();
+      const activeStartDay = year === start.year && month === start.month ? start.day : 1;
+      const activeEndDay = year === end.year && month === end.month ? end.day : monthDays;
+      months.push({
+        year, month, key: year + "-" + String(month).padStart(2, "0"),
+        workFactor: (activeEndDay - activeStartDay + 1) / monthDays,
+        activeStartDay, activeEndDay, monthDays,
+      });
+      month += 1;
+      if (month > 12) { month = 1; year += 1; }
+    }
+    return { start, end, valid: true, months, totalDays: daysInclusive(start, end) };
+  }
+
+  function latestPayoutEvent(range, payoutMonth) {
+    const eligible = range.months.filter((month) =>
+      month.month === payoutMonth && month.activeEndDay === month.monthDays
+    );
+    return eligible.length ? eligible[eligible.length - 1] : null;
+  }
+
+  function bonusReferencePeriod(event, basis) {
+    if (basis === "trailing_12") {
+      const endYear = event.month === 1 ? event.year - 1 : event.year;
+      const endMonth = event.month === 1 ? 12 : event.month - 1;
+      return {
+        start: { year: event.year - 1, month: event.month, day: 1 },
+        end: { year: endYear, month: endMonth, day: new Date(endYear, endMonth, 0).getDate() },
+      };
+    }
+    return {
+      start: { year: event.year - 1, month: 1, day: 1 },
+      end: { year: event.year - 1, month: 12, day: 31 },
+    };
+  }
+
+  function overlapDays(range, period) {
+    const start = dateTime(range.start) > dateTime(period.start) ? range.start : period.start;
+    const end = dateTime(range.end) < dateTime(period.end) ? range.end : period.end;
+    return dateTime(end) < dateTime(start) ? 0 : daysInclusive(start, end);
+  }
 
   // ---------- 专项附加扣除（选项式 + 二级细分） ----------
   const DEDUCTION_ITEMS = [
@@ -639,10 +749,24 @@
     $("dedTotal").textContent = "¥" + fmt(computeDeduction());
   }
 
-  function effectiveBonus() {
+  function statedBonus() {
     const type = document.querySelector('input[name="bonusType"]:checked').value;
     if (type === "months") return num("bonusMonths") * num("base");
     return num("bonus");
+  }
+
+  function bonusCalculation() {
+    const target = statedBonus();
+    const bonusMonth = parseInt($("bonusMonth").value, 10);
+    const basis = document.querySelector('input[name="bonusProrationBasis"]:checked').value;
+    const range = buildRange($("joinDate").value, $("endDate").value);
+    const event = range.valid ? latestPayoutEvent(range, bonusMonth) : null;
+    if (!event) return { target, actual: 0, bonusMonth, basis, factor: 0, serviceDays: 0, referenceDays: 0, reference: null, range, event: null };
+    const reference = bonusReferencePeriod(event, basis);
+    const referenceDays = daysInclusive(reference.start, reference.end);
+    const serviceDays = overlapDays(range, reference);
+    const factor = Math.min(1, Math.max(0, serviceDays / referenceDays));
+    return { target, actual: target * factor, bonusMonth, basis, factor, serviceDays, referenceDays, reference, range, event };
   }
 
   function personalPensionAmount() {
@@ -650,30 +774,87 @@
     return Math.min(num("pensionAmount"), 12000);
   }
 
+  function stockTaxMode(type) {
+    if (type === "listed" || type === "listed_stock" || type === "listed_option") return "listed";
+    if (type === "deferred") return "deferred";
+    return "ordinary";
+  }
+
+  function syncStockUI() {
+    const type = $("stockType").value;
+    const mode = stockTaxMode(type);
+    if (type === "listed_option") {
+      $("stockAmountLabel").textContent = "期权行权收益（元/年）";
+      $("stockMonthLabel").textContent = "期权行权月份";
+      $("stockHint").textContent = "请输入（行权日股票公允价格－行权价）× 行权数量得到的计税收入。同一年度内符合条件的上市公司期权、股票及其他股权激励合并后，单独适用年度综合所得税率表。";
+    } else if (mode === "listed") {
+      $("stockAmountLabel").textContent = "股权激励计税收入（元/年）";
+      $("stockMonthLabel").textContent = "归属 / 解禁月份";
+      $("stockHint").textContent = "请输入归属、解禁或取得时确认的计税收入；不并入工资综合所得，同一年度符合条件的股权激励合并后单独适用年度综合所得税率表。";
+    } else if (mode === "deferred") {
+      $("stockAmountLabel").textContent = "取得股权价值（元/年）";
+      $("stockMonthLabel").textContent = "取得 / 行权月份";
+      $("stockHint").textContent = "适用于已完成备案且符合条件的非上市公司股权激励。取得时暂不计个税；转让时通常按应税转让所得的 20% 另行计算，本工具暂不估算转让环节税款。";
+    } else {
+      $("stockAmountLabel").textContent = "股票 / 现金激励收入（元/年）";
+      $("stockMonthLabel").textContent = "股票发放月份";
+      $("stockHint").textContent = "适用于现金形式股票补贴或不符合单独、递延条件的激励；本金额并入发放年度综合所得累计计税。";
+    }
+  }
+
   function syncBonusAndPensionUI() {
+    syncStockUI();
     const type = document.querySelector('input[name="bonusType"]:checked').value;
     $("bonusAmountField").hidden = type !== "amount";
     $("bonusMonthsField").hidden = type !== "months";
     document.querySelectorAll(".bt-opt").forEach((c) =>
       c.classList.toggle("selected", c.querySelector("input").checked));
-    const b = effectiveBonus();
-    $("bonusHint").textContent = type === "months"
-      ? "当前年终奖 = " + (num("bonusMonths") || 0) + " 个月 × 基本工资 ¥" + fmt(num("base")) + " = ¥" + fmt(b)
-      : "当前年终奖 = ¥" + fmt(b);
+    const bonusCalc = bonusCalculation();
+    const range = bonusCalc.range;
+    const targetText = type === "months"
+      ? (num("bonusMonths") || 0) + " 个月 × 基本工资 ¥" + fmt(num("base")) + " = ¥" + fmt(bonusCalc.target)
+      : "目标金额 ¥" + fmt(bonusCalc.target);
+    if (!range.valid) {
+      $("bonusHint").textContent = targetText + "；请先修正计算日期范围";
+    } else if (!bonusCalc.event) {
+      $("bonusHint").textContent = targetText + "；所选范围尚未到达发放月份，本次不计入";
+    } else if (bonusCalc.factor >= 1) {
+      $("bonusHint").textContent = targetText + "；参考期 " + dateLabel(bonusCalc.reference.start) + " 至 " +
+        dateLabel(bonusCalc.reference.end) + "，在职覆盖 " + bonusCalc.serviceDays + "/" + bonusCalc.referenceDays + " 天，不折算";
+    } else {
+      $("bonusHint").textContent = targetText + " × 时间系数 " + fmt2(bonusCalc.factor * 100) +
+        "%（参考期 " + dateLabel(bonusCalc.reference.start) + " 至 " + dateLabel(bonusCalc.reference.end) +
+        "，在职 " + bonusCalc.serviceDays + "/" + bonusCalc.referenceDays + " 天）= 最近一次预计 ¥" + fmt(bonusCalc.actual);
+    }
+    $("employmentHint").classList.toggle("error", !range.valid);
+    if (!range.valid) {
+      $("employmentHint").textContent = "计算截止日期不能早于入职日期。";
+    } else {
+      $("employmentHint").textContent = dateLabel(range.start) + " 至 " + dateLabel(range.end) + "，共 " +
+        range.months.length + " 个自然月 / " + range.totalDays + " 天；起止月按实际天数折算。";
+    }
     $("pensionAmountWrap").hidden = !$("pensionEnabled").checked;
   }
 
   // ---------- 读取输入 ----------
   function readInputs() {
+    const bonusCalc = bonusCalculation();
     return {
+      joinDate: $("joinDate").value,
+      endDate: $("endDate").value,
+      range: bonusCalc.range,
       base: num("base"),
       housingPct: num("housingPct") / 100,
       specialDeduction: computeDeduction(),
       subsidy: num("subsidy"),
       stock: num("stock"),
+      stockType: $("stockType").value,
       stockMonth: parseInt($("stockMonth").value, 10),
-      bonus: effectiveBonus(),
-      bonusMonth: parseInt($("bonusMonth").value, 10),
+      bonusTarget: bonusCalc.target,
+      bonus: bonusCalc.actual,
+      bonusMonth: bonusCalc.bonusMonth,
+      bonusProrationBasis: bonusCalc.basis,
+      bonusEvent: bonusCalc.event,
       personalPension: personalPensionAmount(),
       housingWithdraw: num("housingWithdraw"),
       fixedConsumption: num("fixedConsumption"),
@@ -696,14 +877,14 @@
     return extras.filter((e) => e.month === month).reduce((s, e) => s + e.amount, 0);
   }
 
-  function getSplit(bonus) {
+  function getSplit(bonus, optimized) {
     const mode = document.querySelector('input[name="bonusMode"]:checked').value;
     let separate = 0, merged = 0;
     if (mode === "separate") { separate = bonus; }
     else if (mode === "merged") { merged = bonus; }
     else {
-      separate = Math.min(Math.max(0, num("separateAmount")), bonus);
-      merged = bonus - separate;
+      separate = optimized ? optimized.separate : 0;
+      merged = optimized ? optimized.merged : bonus;
     }
     return { mode, separate, merged };
   }
@@ -712,68 +893,124 @@
   function compute(inputs, split) {
     const monthlySIVal = monthlySI(inputs.base, inputs.housingPct);
     const monthlySalary = inputs.base + inputs.subsidy;
+    const pensionMonthly = inputs.personalPension / 12;
+    const rangeMonths = inputs.range.valid ? inputs.range.months : [];
+    const stockMode = stockTaxMode(inputs.stockType);
 
-    // 年度综合所得（不含年终奖）的应纳税所得额
-    const annualIncomeNoBonus = monthlySalary * 12 + inputs.stock;
-    const annualDeduction = (5000 + monthlySIVal + inputs.specialDeduction) * 12 + inputs.personalPension;
-    const otherTaxable = annualIncomeNoBonus - annualDeduction; // 可能为负
+    // 先按自然年度汇总不含年终奖的综合所得，以及需要单独计税的上市公司股权激励。
+    const yearlyBase = new Map();
+    const yearlyEquityIncome = new Map();
+    let totalIncomeNoBonus = 0;
+    rangeMonths.forEach((period) => {
+      const stockIncome = period.month === inputs.stockMonth && period.activeEndDay === period.monthDays ? inputs.stock : 0;
+      const salaryIncome = monthlySalary * period.workFactor;
+      const comprehensiveStockIncome = stockMode === "ordinary" ? stockIncome : 0;
+      const income = salaryIncome + comprehensiveStockIncome;
+      const deduction = 5000 + monthlySIVal * period.workFactor + inputs.specialDeduction + pensionMonthly;
+      const current = yearlyBase.get(period.year) || { income: 0, deduction: 0 };
+      current.income += income;
+      current.deduction += deduction;
+      yearlyBase.set(period.year, current);
+      totalIncomeNoBonus += salaryIncome + stockIncome;
+      if (stockMode === "listed" && stockIncome > 0) {
+        yearlyEquityIncome.set(period.year, (yearlyEquityIncome.get(period.year) || 0) + stockIncome);
+      }
+    });
 
-    const comprehensiveTaxable = Math.max(0, otherTaxable + split.merged);
-    const comprehensiveTax = taxByBrackets(comprehensiveTaxable, ANNUAL_BRACKETS);
+    const equityTaxByYear = new Map();
+    let equityTax = 0;
+    yearlyEquityIncome.forEach((income, year) => {
+      const tax = taxByBrackets(income, ANNUAL_BRACKETS);
+      equityTaxByYear.set(year, tax);
+      equityTax += tax;
+    });
+
+    const bonusYear = inputs.bonusEvent ? inputs.bonusEvent.year : null;
+    let otherTaxable = 0;
+    let otherYearsTax = 0;
+    let comprehensiveTaxable = 0;
+    let comprehensiveTax = 0;
+    yearlyBase.forEach((values, year) => {
+      const baseTaxable = values.income - values.deduction;
+      const mergedBonus = year === bonusYear ? split.merged : 0;
+      const taxable = Math.max(0, baseTaxable + mergedBonus);
+      comprehensiveTaxable += taxable;
+      comprehensiveTax += taxByBrackets(taxable, ANNUAL_BRACKETS);
+      if (year === bonusYear) otherTaxable = baseTaxable;
+      else otherYearsTax += taxByBrackets(Math.max(0, baseTaxable), ANNUAL_BRACKETS);
+    });
     const sepTax = separateBonusTax(split.separate);
-    const totalTax = comprehensiveTax + sepTax;
+    const totalTax = comprehensiveTax + equityTax + sepTax;
 
-    const annualIncome = annualIncomeNoBonus + inputs.bonus;
-    const annualSI = monthlySIVal * 12;
+    const serviceMonthEquivalent = rangeMonths.reduce((sum, period) => sum + period.workFactor, 0);
+    const annualIncome = totalIncomeNoBonus + inputs.bonus;
+    const annualSI = monthlySIVal * serviceMonthEquivalent;
     const afterTax = annualIncome - annualSI - totalTax;
     // 个人账户拆解：养老个人账户 8%、医疗个人账户 2%、公积金个人+单位各按系数
-    const annualPensionAccount = inputs.base * 0.08 * 12;
-    const annualMedicalAccount = inputs.base * 0.02 * 12;
-    const annualHousingAccount = inputs.base * inputs.housingPct * 2 * 12;
-    const annualWithdrawal = inputs.housingWithdraw * 12;
-    const annualConsumption = inputs.fixedConsumption * 12 +
-      inputs.extras.reduce((s, e) => s + e.amount, 0);
-    const net = afterTax + annualWithdrawal - annualConsumption;
+    const annualPensionAccount = inputs.base * 0.08 * serviceMonthEquivalent;
+    const annualMedicalAccount = inputs.base * 0.02 * serviceMonthEquivalent;
+    const annualHousingAccount = inputs.base * inputs.housingPct * 2 * serviceMonthEquivalent;
+    const personalPension = pensionMonthly * rangeMonths.length;
 
-    // 逐月（年终奖并入发放月展示；计税时仍按所选方案区分合并与单独部分）
+    // 逐月（年终奖仅在范围内最近一次发放；计税时按所选方案区分合并与单独部分）
     const months = [];
+    let currentYear = null;
     let cumIncome = 0, cumDeduction = 0, cumTax = 0;
-    for (let m = 1; m <= 12; m++) {
-      let comprehensiveIncome = monthlySalary;
-      if (m === inputs.stockMonth) comprehensiveIncome += inputs.stock;
-      if (m === inputs.bonusMonth) comprehensiveIncome += split.merged;
-
-      let income = monthlySalary;
-      if (m === inputs.stockMonth) income += inputs.stock;
-      if (m === inputs.bonusMonth) income += inputs.bonus;
-
-      const deduction = 5000 + monthlySIVal + inputs.specialDeduction + inputs.personalPension / 12;
+    rangeMonths.forEach((period) => {
+      if (period.year !== currentYear) {
+        currentYear = period.year;
+        cumIncome = 0;
+        cumDeduction = 0;
+        cumTax = 0;
+      }
+      const workFactor = period.workFactor;
+      const stockIncome = period.month === inputs.stockMonth && period.activeEndDay === period.monthDays ? inputs.stock : 0;
+      const salaryIncome = monthlySalary * workFactor;
+      const isBonusMonth = !!inputs.bonusEvent && period.key === inputs.bonusEvent.key;
+      const bonusIncome = isBonusMonth ? inputs.bonus : 0;
+      const mergedBonus = isBonusMonth ? split.merged : 0;
+      const separateBonus = isBonusMonth ? split.separate : 0;
+      const income = salaryIncome + stockIncome + bonusIncome;
+      const comprehensiveStockIncome = stockMode === "ordinary" ? stockIncome : 0;
+      const comprehensiveIncome = salaryIncome + comprehensiveStockIncome + mergedBonus;
+      const monthSI = monthlySIVal * workFactor;
+      const specialDeduction = inputs.specialDeduction;
+      const monthPension = pensionMonthly;
+      const basicDeduction = 5000;
+      const deduction = basicDeduction + monthSI + specialDeduction + monthPension;
       cumIncome += comprehensiveIncome;
       cumDeduction += deduction;
       const taxable = Math.max(0, cumIncome - cumDeduction);
       const thisCumTax = taxByBrackets(taxable, ANNUAL_BRACKETS);
       const comprehensiveMonthTax = thisCumTax - cumTax;
       cumTax = thisCumTax;
-      const separateMonthTax = m === inputs.bonusMonth ? sepTax : 0;
-      const monthTax = comprehensiveMonthTax + separateMonthTax;
+      const separateMonthTax = separateBonus > 0 ? sepTax : 0;
+      const equityMonthTax = stockMode === "listed" && stockIncome > 0
+        ? (equityTaxByYear.get(period.year) || 0)
+        : 0;
+      const monthTax = comprehensiveMonthTax + equityMonthTax + separateMonthTax;
 
-      const consumption = inputs.fixedConsumption + extraForMonth(inputs.extras, m);
-      const afterTaxM = income - monthlySIVal - monthTax;
+      const consumption = inputs.fixedConsumption + extraForMonth(inputs.extras, period.month);
+      const afterTaxM = income - monthSI - monthTax;
+      const housingWithdraw = inputs.housingWithdraw * workFactor;
 
       months.push({
-        month: m,
-        income, monthlySIVal, specialDeduction: inputs.specialDeduction,
-        pensionMonthly: inputs.personalPension / 12,
-        basicDeduction: 5000, taxable, monthTax,
-        housingWithdraw: inputs.housingWithdraw,
-        afterTax: afterTaxM, consumption, net: afterTaxM + inputs.housingWithdraw - consumption,
+        year: period.year, month: period.month, key: period.key, workFactor,
+        salaryIncome, stockIncome, bonusIncome, income, monthlySIVal: monthSI, specialDeduction,
+        pensionMonthly: monthPension, basicDeduction, taxable, monthTax, equityTax: equityMonthTax,
+        housingWithdraw,
+        afterTax: afterTaxM, consumption, net: afterTaxM + housingWithdraw - consumption,
       });
-    }
+    });
+
+    const annualWithdrawal = months.reduce((sum, month) => sum + month.housingWithdraw, 0);
+    const annualConsumption = months.reduce((sum, month) => sum + month.consumption, 0);
+    const net = afterTax + annualWithdrawal - annualConsumption;
 
     return {
-      monthlySIVal, otherTaxable, comprehensiveTaxable, comprehensiveTax,
-      sepTax, totalTax, annualIncome, annualSI, afterTax, annualConsumption, net, months,
-      personalPension: inputs.personalPension,
+      monthlySIVal, otherTaxable, otherYearsTax, comprehensiveTaxable, comprehensiveTax,
+      equityTax, sepTax, totalTax, annualIncome, annualSI, afterTax, annualConsumption, net, months,
+      personalPension,
       annualPensionAccount, annualMedicalAccount, annualHousingAccount, annualWithdrawal,
     };
   }
@@ -803,25 +1040,20 @@
   function render() {
     syncBonusAndPensionUI();
     const inputs = readInputs();
-    const split = getSplit(inputs.bonus);
+    const baseline = compute(inputs, { mode: "separate", separate: inputs.bonus, merged: 0 });
+    const opt = optimizeBonus(inputs.bonus, baseline.otherTaxable);
+    const split = getSplit(inputs.bonus, opt);
     const r = compute(inputs, split);
-    const opt = optimizeBonus(inputs.bonus, r.otherTaxable);
 
     // 三种方案的总税负（用于对比卡片）
-    const taxAllSeparate = taxByBrackets(Math.max(0, r.otherTaxable), ANNUAL_BRACKETS) + separateBonusTax(inputs.bonus);
-    const taxAllMerged = taxByBrackets(Math.max(0, r.otherTaxable + inputs.bonus), ANNUAL_BRACKETS);
-    const taxMixed = opt.total;
+    const taxAllSeparate = r.equityTax + r.otherYearsTax + taxByBrackets(Math.max(0, r.otherTaxable), ANNUAL_BRACKETS) + separateBonusTax(inputs.bonus);
+    const taxAllMerged = r.equityTax + r.otherYearsTax + taxByBrackets(Math.max(0, r.otherTaxable + inputs.bonus), ANNUAL_BRACKETS);
+    const taxMixed = r.equityTax + r.otherYearsTax + opt.total;
 
     // 年终奖对比卡片
     $("tax-separate").textContent = "总税负 ¥" + fmt(taxAllSeparate);
     $("tax-merged").textContent = "总税负 ¥" + fmt(taxAllMerged);
     $("tax-mixed").textContent = "总税负 ¥" + fmt(taxMixed);
-
-    // 推荐拆分值填入（仅当用户选择混合且尚未手动改时）
-    if (split.mode === "mixed" && !window._userEditedSplit) {
-      $("separateAmount").value = Math.round(opt.separate);
-    }
-    $("mergedAmount").textContent = fmt(split.merged);
 
     // 年终奖拆分条
     const sepBar = inputs.bonus > 0 ? (split.separate / inputs.bonus) * 100 : 0;
@@ -830,28 +1062,37 @@
       '<span style="width:' + (100 - sepBar) + '%;background:#93c5fd"></span>';
 
     // 方案税负拆解
-    $("bd-sep-comp").textContent = "¥" + fmt(taxByBrackets(Math.max(0, r.otherTaxable), ANNUAL_BRACKETS));
+    $("bd-sep-amount").textContent = "¥" + fmt(inputs.bonus);
+    $("bd-sep-merged").textContent = "¥0";
+    $("bd-sep-comp").textContent = "¥" + fmt(r.otherYearsTax + taxByBrackets(Math.max(0, r.otherTaxable), ANNUAL_BRACKETS));
+    $("bd-sep-stock").textContent = "¥" + fmt(r.equityTax);
     $("bd-sep-bonus").textContent = "¥" + fmt(separateBonusTax(inputs.bonus));
     $("bd-sep-total").textContent = "¥" + fmt(taxAllSeparate);
-    $("bd-mer-comp").textContent = "¥" + fmt(taxAllMerged);
+    $("bd-mer-amount").textContent = "¥0";
+    $("bd-mer-merged").textContent = "¥" + fmt(inputs.bonus);
+    $("bd-mer-comp").textContent = "¥" + fmt(taxAllMerged - r.equityTax);
+    $("bd-mer-stock").textContent = "¥" + fmt(r.equityTax);
     $("bd-mer-bonus").textContent = "¥0";
     $("bd-mer-total").textContent = "¥" + fmt(taxAllMerged);
-    $("bd-mix-comp").textContent = "¥" + fmt(taxByBrackets(Math.max(0, r.otherTaxable + opt.merged), ANNUAL_BRACKETS));
+    $("bd-mix-amount").textContent = "¥" + fmt(opt.separate);
+    $("bd-mix-merged").textContent = "¥" + fmt(opt.merged);
+    $("bd-mix-comp").textContent = "¥" + fmt(r.otherYearsTax + taxByBrackets(Math.max(0, r.otherTaxable + opt.merged), ANNUAL_BRACKETS));
+    $("bd-mix-stock").textContent = "¥" + fmt(r.equityTax);
     $("bd-mix-bonus").textContent = "¥" + fmt(separateBonusTax(opt.separate));
     $("bd-mix-total").textContent = "¥" + fmt(taxMixed);
 
-    // 年度概览 KPI
+    // 范围概览 KPI
     const effRate = r.annualIncome > 0 ? (r.totalTax / r.annualIncome) * 100 : 0;
     $("kpis").innerHTML =
-      kpi("全年税前收入", "¥" + fmt(r.annualIncome), "含工资/补贴/股票/年终奖") +
-      kpi("全年税后收入", "¥" + fmt(r.afterTax), "税前 − 五险一金 − 个税", "green") +
-      kpi("全年个税", "¥" + fmt(r.totalTax), "综合所得 + 年终奖", "red") +
-      kpi("全年公积金（含单位）", "¥" + fmt(r.annualHousingAccount), "个人+单位缴存，全年提取 ¥" + fmt(r.annualWithdrawal)) +
-      kpi("全年养老金个人账户", "¥" + fmt(r.annualPensionAccount), "社保个人缴存 8%") +
-      kpi("全年医疗保险个人账户", "¥" + fmt(r.annualMedicalAccount), "社保个人缴存 2%") +
-      kpi("全年个人养老金", "¥" + fmt(r.personalPension), "自愿缴存，税前扣除，最高1.2万/年") +
-      kpi("全年消费支出", "¥" + fmt(r.annualConsumption), "固定 + 额外开支") +
-      kpi("全年净结余", "¥" + fmt(r.net), "税后收入 + 公积金提取 − 消费", r.net >= 0 ? "green" : "red") +
+      kpi("期间税前收入", "¥" + fmt(r.annualIncome), "含工资、股票及最近一次年终奖") +
+      kpi("期间税后收入", "¥" + fmt(r.afterTax), "税前 − 五险一金 − 个税", "green") +
+      kpi("期间个税", "¥" + fmt(r.totalTax), "综合所得、股权激励与年终奖合计", "red") +
+      kpi("期间公积金（含单位）", "¥" + fmt(r.annualHousingAccount), "个人+单位缴存，期间提取 ¥" + fmt(r.annualWithdrawal)) +
+      kpi("期间养老金个人账户", "¥" + fmt(r.annualPensionAccount), "社保个人缴存 8%") +
+      kpi("期间医疗保险个人账户", "¥" + fmt(r.annualMedicalAccount), "社保个人缴存 2%") +
+      kpi("期间个人养老金", "¥" + fmt(r.personalPension), "按月折算，单个自然年最高 1.2 万") +
+      kpi("期间消费支出", "¥" + fmt(r.annualConsumption), "固定 + 额外开支") +
+      kpi("期间净结余", "¥" + fmt(r.net), "税后收入 + 公积金提取 − 消费", r.net >= 0 ? "green" : "red") +
       kpi("实际税负率", effRate.toFixed(2) + "%", "个税 / 税前收入", "hl");
 
     // 年度收入构成条
@@ -882,23 +1123,59 @@
 
   function renderMonthly(r, inputs, split) {
     const tbody = document.querySelector("#monthlyTable tbody");
+    const all = r.months;
+    if (!all.length) {
+      $("monthlyRangeHint").textContent = "请先填写有效的计算起止日期。";
+      tbody.innerHTML = "<tr><td colspan='12' style='text-align:center;color:#64748b;padding:24px'>暂无可计算月份</td></tr>";
+      return;
+    }
+
+    const visible = all.slice(-12);
+    const first = visible[0];
+    const last = visible[visible.length - 1];
+    const visibleRange = first.year + " 年 " + first.month + " 月至 " + last.year + " 年 " + last.month + " 月";
+    $("monthlyRangeHint").textContent = all.length > 12
+      ? "共计算 " + all.length + " 个月，以下仅展示最近 12 个月（" + visibleRange + "）；跨年时每年 1 月重新累计"
+      : "共计算 " + all.length + " 个月（" + visibleRange + "）；跨年时每年 1 月重新累计";
+
+    const stockMode = stockTaxMode(inputs.stockType);
     let html = "";
-    r.months.forEach((m) => {
+    visible.forEach((m) => {
       const extra = extraForMonth(inputs.extras, m.month);
-      const hasBonus = inputs.bonus > 0 && m.month === inputs.bonusMonth;
-      const taxableNote = !hasBonus ? "" :
-        split.separate > 0 && split.merged > 0 ? "<br><span class='taxable-note'>仅含并入部分</span>" :
-        split.separate > 0 ? "<br><span class='taxable-note'>年终奖另计，未计入</span>" :
-        "<br><span class='taxable-note'>已含并入年终奖</span>";
+      const hasBonus = m.bonusIncome > 0;
+      const hasStock = m.stockIncome > 0;
+      const taxableNotes = [];
+      if (hasStock && stockMode === "listed") taxableNotes.push("股权激励单独计税，未计入");
+      if (hasStock && stockMode === "deferred") taxableNotes.push("股权递延纳税，未计入");
+      if (hasBonus) {
+        if (split.separate > 0 && split.merged > 0) taxableNotes.push("年终奖仅含并入部分");
+        else if (split.separate > 0) taxableNotes.push("年终奖另计，未计入");
+        else taxableNotes.push("已含并入年终奖");
+      }
+      const taxableNote = taxableNotes.length
+        ? "<br><span class='taxable-note'>" + taxableNotes.join("；") + "</span>"
+        : "";
+      const stockTag = stockMode === "listed" ? "股权·单独" : stockMode === "deferred" ? "股权·递延" : "股票·合并";
+      const incomeTags =
+        (hasStock ? "<span class='tag-pill stock'>" + stockTag + "</span> " : "") +
+        (hasBonus ? "<span class='tag-pill bonus'>含年终奖</span> " : "");
+      const incomeParts = ["工资与补贴 ¥" + fmt(m.salaryIncome)];
+      if (hasStock) incomeParts.push((stockMode === "ordinary" ? "股票/现金激励 " : "股权激励 ") + "¥" + fmt(m.stockIncome));
+      if (hasBonus) incomeParts.push("年终奖 ¥" + fmt(m.bonusIncome));
+      const taxNote = m.equityTax > 0
+        ? "<br><span class='taxable-note'>含股权激励税 ¥" + fmt(m.equityTax) + "</span>"
+        : hasStock && stockMode === "deferred"
+          ? "<br><span class='taxable-note'>转让环节税款未估算</span>"
+          : "";
       html += "<tr>" +
-        "<td>" + m.month + " 月</td>" +
-        "<td>" + (hasBonus ? "<span class='tag-pill bonus'>含年终奖</span> " : "") + "¥" + fmt(m.income) + "</td>" +
+        "<td>" + m.year + " 年 " + m.month + " 月</td>" +
+        "<td>" + incomeTags + "¥" + fmt(m.income) + "<br><span class='taxable-note'>" + incomeParts.join(" + ") + "</span></td>" +
         "<td>¥" + fmt(m.monthlySIVal) + "</td>" +
         "<td>¥" + fmt(m.specialDeduction) + "</td>" +
         "<td>¥" + fmt(m.pensionMonthly) + "</td>" +
         "<td>¥" + fmt(m.basicDeduction) + "</td>" +
         "<td>¥" + fmt(m.taxable) + taxableNote + "</td>" +
-        "<td>¥" + fmt(m.monthTax) + "</td>" +
+        "<td>¥" + fmt(m.monthTax) + taxNote + "</td>" +
         "<td>¥" + fmt(m.afterTax) + "</td>" +
         "<td>¥" + fmt(m.housingWithdraw) + "</td>" +
         "<td>¥" + fmt(m.consumption) + (extra > 0 ? " <span class='tag-pill rec'>含额外</span>" : "") + "</td>" +
@@ -906,24 +1183,34 @@
         "</tr>";
     });
 
-    // 全年合计
-    const all = r.months;
+    // 期间合计始终覆盖完整范围，而不仅是上方可见的最近 12 个月。
     const sum = (f) => all.reduce((s, m) => s + f(m), 0);
-    const annualTaxableNote = inputs.bonus <= 0 ? "" :
+    const bonusTaxableNote = inputs.bonus <= 0 ? "" :
       split.separate > 0 && split.merged > 0
-        ? "<br><span class='taxable-note'>已含并入年终奖 ¥" + fmt(split.merged) + "；另计 ¥" + fmt(split.separate) + "</span>"
+        ? "；已含并入年终奖 ¥" + fmt(split.merged) + "，另计 ¥" + fmt(split.separate)
         : split.separate > 0
-          ? "<br><span class='taxable-note'>另：单独计税年终奖 ¥" + fmt(split.separate) + "</span>"
-          : "<br><span class='taxable-note'>已含并入年终奖 ¥" + fmt(split.merged) + "</span>";
+          ? "；另：单独计税年终奖 ¥" + fmt(split.separate)
+          : "；已含并入年终奖 ¥" + fmt(split.merged);
+    const stockTaxableNote = stockMode === "listed" && inputs.stock > 0
+      ? "；不含单独计税股权激励"
+      : stockMode === "deferred" && inputs.stock > 0
+        ? "；不含递延纳税股权"
+        : "";
+    const annualTaxableNote = "<br><span class='taxable-note'>按自然年度分别计算后合计" + stockTaxableNote + bonusTaxableNote + "</span>";
+    const totalTaxNote = r.equityTax > 0
+      ? "<br><span class='taxable-note'>其中股权激励税 ¥" + fmt(r.equityTax) + "</span>"
+      : stockMode === "deferred" && inputs.stock > 0
+        ? "<br><span class='taxable-note'>未含未来转让税</span>"
+        : "";
     html += "<tr class='row-total'>" +
-      "<td>全年合计</td>" +
+      "<td>期间合计" + (all.length > 12 ? "（全部 " + all.length + " 个月）" : "") + "</td>" +
       "<td>¥" + fmt(sum((m) => m.income)) + "</td>" +
       "<td>¥" + fmt(sum((m) => m.monthlySIVal)) + "</td>" +
       "<td>¥" + fmt(sum((m) => m.specialDeduction)) + "</td>" +
       "<td>¥" + fmt(sum((m) => m.pensionMonthly)) + "</td>" +
       "<td>¥" + fmt(sum((m) => m.basicDeduction)) + "</td>" +
       "<td>¥" + fmt(r.comprehensiveTaxable) + annualTaxableNote + "</td>" +
-      "<td>¥" + fmt(sum((m) => m.monthTax)) + "</td>" +
+      "<td>¥" + fmt(sum((m) => m.monthTax)) + totalTaxNote + "</td>" +
       "<td>¥" + fmt(sum((m) => m.afterTax)) + "</td>" +
       "<td>¥" + fmt(sum((m) => m.housingWithdraw)) + "</td>" +
       "<td>¥" + fmt(sum((m) => m.consumption)) + "</td>" +
@@ -953,16 +1240,19 @@
   // ---------- 状态保存 / 恢复 ----------
   function saveState() {
     const data = {
+      joinDate: $("joinDate").value,
+      endDate: $("endDate").value,
       base: $("base").value, housingPct: $("housingPct").value,
       deductions: deductionState, subsidy: $("subsidy").value,
-      stock: $("stock").value, stockMonth: $("stockMonth").value, bonus: $("bonus").value, bonusMonth: $("bonusMonth").value,
+      stock: $("stock").value, stockType: $("stockType").value, stockMonth: $("stockMonth").value,
+      bonus: $("bonus").value, bonusMonth: $("bonusMonth").value,
       bonusType: document.querySelector('input[name="bonusType"]:checked').value,
       bonusMonths: $("bonusMonths").value,
+      bonusProrationBasis: document.querySelector('input[name="bonusProrationBasis"]:checked').value,
       pensionEnabled: $("pensionEnabled").checked, pensionAmount: $("pensionAmount").value,
       housingWithdraw: $("housingWithdraw").value,
       fixedConsumption: $("fixedConsumption").value,
       bonusMode: document.querySelector('input[name="bonusMode"]:checked').value,
-      separateAmount: $("separateAmount").value,
       extras: readExtras(),
     };
     try { localStorage.setItem("salaryCalc", JSON.stringify(data)); } catch (e) {}
@@ -973,20 +1263,27 @@
     try { data = JSON.parse(localStorage.getItem("salaryCalc")); } catch (e) {}
     if (!data) return;
     const set = (id, v) => { if (v !== undefined && v !== null) $(id).value = v; };
+    set("joinDate", data.joinDate);
+    set("endDate", data.endDate);
     set("base", data.base); set("housingPct", data.housingPct);
     set("subsidy", data.subsidy);
     if (data.deductions) deductionState = Object.assign(defaultDeductionState(), data.deductions);
-    set("stock", data.stock); set("stockMonth", data.stockMonth);
+    set("stock", data.stock);
+    set("stockType", data.stockType === "listed" ? "listed_stock" : data.stockType);
+    set("stockMonth", data.stockMonth);
     set("bonus", data.bonus); set("bonusMonth", data.bonusMonth); set("bonusMonths", data.bonusMonths);
     if (data.bonusType) {
       const r = document.querySelector('input[name="bonusType"][value="' + data.bonusType + '"]');
+      if (r) r.checked = true;
+    }
+    if (data.bonusProrationBasis) {
+      const r = document.querySelector('input[name="bonusProrationBasis"][value="' + data.bonusProrationBasis + '"]');
       if (r) r.checked = true;
     }
     if (data.pensionEnabled !== undefined) $("pensionEnabled").checked = !!data.pensionEnabled;
     set("pensionAmount", data.pensionAmount);
     set("housingWithdraw", data.housingWithdraw);
     set("fixedConsumption", data.fixedConsumption);
-    set("separateAmount", data.separateAmount);
     if (data.bonusMode) {
       const r = document.querySelector('input[name="bonusMode"][value="' + data.bonusMode + '"]');
       if (r) r.checked = true;
@@ -998,14 +1295,13 @@
   // ---------- 事件绑定 ----------
   function bind() {
     document.querySelectorAll("input, select").forEach((el) => {
-      el.addEventListener("input", () => { if (el.id === "separateAmount") window._userEditedSplit = true; render(); });
+      el.addEventListener("input", () => { render(); });
       el.addEventListener("change", () => { render(); });
     });
 
     // 方案卡片选择
     document.querySelectorAll('input[name="bonusMode"]').forEach((r) => {
       r.addEventListener("change", () => {
-        window._userEditedSplit = false;
         document.querySelectorAll(".mode-card").forEach((c) =>
           c.classList.toggle("selected", c.querySelector("input").checked));
         render();
@@ -1052,6 +1348,8 @@
   }
 
   // ---------- 初始化 ----------
+  $("joinDate").value = CALCULATION_YEAR + "-01-01";
+  $("endDate").value = CALCULATION_YEAR + "-12-31";
   restoreState();
   bind();
   renderDeductions();
