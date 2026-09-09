@@ -156,7 +156,7 @@
   .mode-card .tag { display: inline-block; font-size: 10.5px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 999px; padding: 1px 8px; margin-left: 6px; vertical-align: 1px; }
   .bd-title { font-size: 13px; font-weight: 700; color: #374151; margin: 14px 0 8px; }
   .bd-scroll { overflow-x: auto; }
-  .bd-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 720px; }
+  .bd-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 640px; }
   .bd-table th, .bd-table td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
   .bd-table th { background: #f8fafc; color: #475569; font-weight: 600; }
   .bd-table th:first-child, .bd-table td:first-child { text-align: left; }
@@ -394,16 +394,16 @@
         </div>
       </div>
 
-      <div class="bd-title">方案税负拆解</div>
+      <div class="bd-title">年终奖方案税负拆解</div>
       <div class="bd-scroll">
         <table class="bd-table">
           <thead>
-            <tr><th>方案</th><th>单独计税金额</th><th>合并计税金额</th><th>综合所得税</th><th>股权激励税</th><th>年终奖单独税</th><th>个税合计</th></tr>
+            <tr><th>方案</th><th>单独计税金额</th><th>合并计税金额</th><th>合并部分增量税</th><th>单独计税税额</th><th>年终奖税额合计</th></tr>
           </thead>
           <tbody>
-            <tr><td>全部单独</td><td id="bd-sep-amount">—</td><td id="bd-sep-merged">—</td><td id="bd-sep-comp">—</td><td id="bd-sep-stock">—</td><td id="bd-sep-bonus">—</td><td id="bd-sep-total">—</td></tr>
-            <tr><td>全部合并</td><td id="bd-mer-amount">—</td><td id="bd-mer-merged">—</td><td id="bd-mer-comp">—</td><td id="bd-mer-stock">—</td><td id="bd-mer-bonus">—</td><td id="bd-mer-total">—</td></tr>
-            <tr class="bd-rec"><td>混合（规划）</td><td id="bd-mix-amount">—</td><td id="bd-mix-merged">—</td><td id="bd-mix-comp">—</td><td id="bd-mix-stock">—</td><td id="bd-mix-bonus">—</td><td id="bd-mix-total">—</td></tr>
+            <tr><td>全部单独</td><td id="bd-sep-amount">—</td><td id="bd-sep-merged">—</td><td id="bd-sep-comp">—</td><td id="bd-sep-bonus">—</td><td id="bd-sep-total">—</td></tr>
+            <tr><td>全部合并</td><td id="bd-mer-amount">—</td><td id="bd-mer-merged">—</td><td id="bd-mer-comp">—</td><td id="bd-mer-bonus">—</td><td id="bd-mer-total">—</td></tr>
+            <tr class="bd-rec"><td>混合（规划）</td><td id="bd-mix-amount">—</td><td id="bd-mix-merged">—</td><td id="bd-mix-comp">—</td><td id="bd-mix-bonus">—</td><td id="bd-mix-total">—</td></tr>
           </tbody>
         </table>
       </div>
@@ -449,7 +449,7 @@
     <!-- ===================== 月度明细 ===================== -->
     <section class="card col-12">
       <h2>⑤ 月度明细</h2>
-      <p class="sub" id="monthlyRangeHint">按累计预扣法逐月计算；跨年时每年 1 月重新累计，最多展示最近 12 个月</p>
+      <p class="sub" id="monthlyRangeHint">按累计预扣法逐月计算；跨年时每年 1 月重新累计，最多展示最近 24 个月</p>
       <div class="table-scroll">
         <table id="monthlyTable">
           <thead>
@@ -1045,15 +1045,20 @@
     const split = getSplit(inputs.bonus, opt);
     const r = compute(inputs, split);
 
-    // 三种方案的总税负（用于对比卡片）
-    const taxAllSeparate = r.equityTax + r.otherYearsTax + taxByBrackets(Math.max(0, r.otherTaxable), ANNUAL_BRACKETS) + separateBonusTax(inputs.bonus);
-    const taxAllMerged = r.equityTax + r.otherYearsTax + taxByBrackets(Math.max(0, r.otherTaxable + inputs.bonus), ANNUAL_BRACKETS);
-    const taxMixed = r.equityTax + r.otherYearsTax + opt.total;
+    // 方案对比只展示年终奖带来的税额；工资、股票等期间税额在范围概览中汇总。
+    const baseBonusYearTax = taxByBrackets(Math.max(0, r.otherTaxable), ANNUAL_BRACKETS);
+    const mergedBonusTax = (amount) => Math.max(0,
+      taxByBrackets(Math.max(0, r.otherTaxable + amount), ANNUAL_BRACKETS) - baseBonusYearTax);
+    const taxAllSeparate = separateBonusTax(inputs.bonus);
+    const taxAllMerged = mergedBonusTax(inputs.bonus);
+    const taxMixedMerged = mergedBonusTax(opt.merged);
+    const taxMixedSeparate = separateBonusTax(opt.separate);
+    const taxMixed = taxMixedMerged + taxMixedSeparate;
 
     // 年终奖对比卡片
-    $("tax-separate").textContent = "总税负 ¥" + fmt(taxAllSeparate);
-    $("tax-merged").textContent = "总税负 ¥" + fmt(taxAllMerged);
-    $("tax-mixed").textContent = "总税负 ¥" + fmt(taxMixed);
+    $("tax-separate").textContent = "年终奖税 ¥" + fmt(taxAllSeparate);
+    $("tax-merged").textContent = "年终奖税 ¥" + fmt(taxAllMerged);
+    $("tax-mixed").textContent = "年终奖税 ¥" + fmt(taxMixed);
 
     // 年终奖拆分条
     const sepBar = inputs.bonus > 0 ? (split.separate / inputs.bonus) * 100 : 0;
@@ -1064,21 +1069,18 @@
     // 方案税负拆解
     $("bd-sep-amount").textContent = "¥" + fmt(inputs.bonus);
     $("bd-sep-merged").textContent = "¥0";
-    $("bd-sep-comp").textContent = "¥" + fmt(r.otherYearsTax + taxByBrackets(Math.max(0, r.otherTaxable), ANNUAL_BRACKETS));
-    $("bd-sep-stock").textContent = "¥" + fmt(r.equityTax);
-    $("bd-sep-bonus").textContent = "¥" + fmt(separateBonusTax(inputs.bonus));
+    $("bd-sep-comp").textContent = "¥0";
+    $("bd-sep-bonus").textContent = "¥" + fmt(taxAllSeparate);
     $("bd-sep-total").textContent = "¥" + fmt(taxAllSeparate);
     $("bd-mer-amount").textContent = "¥0";
     $("bd-mer-merged").textContent = "¥" + fmt(inputs.bonus);
-    $("bd-mer-comp").textContent = "¥" + fmt(taxAllMerged - r.equityTax);
-    $("bd-mer-stock").textContent = "¥" + fmt(r.equityTax);
+    $("bd-mer-comp").textContent = "¥" + fmt(taxAllMerged);
     $("bd-mer-bonus").textContent = "¥0";
     $("bd-mer-total").textContent = "¥" + fmt(taxAllMerged);
     $("bd-mix-amount").textContent = "¥" + fmt(opt.separate);
     $("bd-mix-merged").textContent = "¥" + fmt(opt.merged);
-    $("bd-mix-comp").textContent = "¥" + fmt(r.otherYearsTax + taxByBrackets(Math.max(0, r.otherTaxable + opt.merged), ANNUAL_BRACKETS));
-    $("bd-mix-stock").textContent = "¥" + fmt(r.equityTax);
-    $("bd-mix-bonus").textContent = "¥" + fmt(separateBonusTax(opt.separate));
+    $("bd-mix-comp").textContent = "¥" + fmt(taxMixedMerged);
+    $("bd-mix-bonus").textContent = "¥" + fmt(taxMixedSeparate);
     $("bd-mix-total").textContent = "¥" + fmt(taxMixed);
 
     // 范围概览 KPI
@@ -1130,12 +1132,12 @@
       return;
     }
 
-    const visible = all.slice(-12);
+    const visible = all.slice(-24);
     const first = visible[0];
     const last = visible[visible.length - 1];
     const visibleRange = first.year + " 年 " + first.month + " 月至 " + last.year + " 年 " + last.month + " 月";
-    $("monthlyRangeHint").textContent = all.length > 12
-      ? "共计算 " + all.length + " 个月，以下仅展示最近 12 个月（" + visibleRange + "）；跨年时每年 1 月重新累计"
+    $("monthlyRangeHint").textContent = all.length > 24
+      ? "共计算 " + all.length + " 个月，以下仅展示最近 24 个月（" + visibleRange + "）；跨年时每年 1 月重新累计"
       : "共计算 " + all.length + " 个月（" + visibleRange + "）；跨年时每年 1 月重新累计";
 
     const stockMode = stockTaxMode(inputs.stockType);
@@ -1183,7 +1185,7 @@
         "</tr>";
     });
 
-    // 期间合计始终覆盖完整范围，而不仅是上方可见的最近 12 个月。
+    // 期间合计始终覆盖完整范围，而不仅是上方可见的最近 24 个月。
     const sum = (f) => all.reduce((s, m) => s + f(m), 0);
     const bonusTaxableNote = inputs.bonus <= 0 ? "" :
       split.separate > 0 && split.merged > 0
