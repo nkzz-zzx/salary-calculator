@@ -78,6 +78,14 @@ test('embedded JavaScript parses, and static DOM ids are unique and resolvable',
   for (const [, id] of script.matchAll(/\$\("([^"]+)"\)/g)) assert.ok(ids.includes(id), `Missing DOM id: ${id}`);
 });
 
+test('salary, annual bonus and monthly consumption default to zero', () => {
+  for (const id of ['base', 'bonus', 'fixedConsumption']) {
+    const input = html.match(new RegExp('<input\\b[^>]*\\bid="' + id + '"[^>]*>'));
+    assert.ok(input, `Missing default field: ${id}`);
+    assert.match(input[0], /\bvalue="0"/);
+  }
+});
+
 test('240 mode, range, equity, realization, pension and bonus combinations reconcile', () => {
   const api = runtime();
   const ranges = [
