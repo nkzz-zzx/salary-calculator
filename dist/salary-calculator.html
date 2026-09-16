@@ -98,6 +98,23 @@
   }
   .input-wrap .suffix { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; pointer-events: none; }
   .input-wrap input { padding-right: 52px; }
+  .contribution-base-options { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fbfcfe; }
+  .contribution-base-option {
+    display: flex !important; align-items: center; gap: 8px; margin: 0 !important; padding: 9px 11px;
+    min-height: 42px; cursor: pointer; transition: background .15s, color .15s;
+  }
+  .contribution-base-option + .contribution-base-option { border-top: 1px solid var(--line); }
+  .contribution-base-option.selected { background: var(--accent-soft); color: var(--accent); }
+  .contribution-base-option > input[type="radio"] { width: 15px; height: 15px; margin: 0; accent-color: var(--accent); flex: 0 0 auto; }
+  .contribution-base-option .option-name { min-width: 0; white-space: nowrap; }
+  .contribution-base-option .option-badge { font-size: 11px; font-weight: 500; color: var(--muted); }
+  .custom-base-entry { position: relative; flex: 1 1 100px; min-width: 100px; max-width: 150px; margin-left: auto; }
+  .custom-base-entry input {
+    width: 100%; padding: 7px 48px 7px 9px; border: 1px solid var(--line); border-radius: 8px;
+    font-size: 14px; color: var(--text); background: #fff;
+  }
+  .custom-base-entry input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+  .custom-base-entry span { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 12px; pointer-events: none; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 480px) { .row2 { grid-template-columns: 1fr; } }
   .note {
@@ -290,15 +307,23 @@
         </div>
         <div class="field">
           <label>社保及公积金缴纳基数</label>
-          <div class="input-wrap">
-            <select id="socialBaseMode">
-              <option value="salary" selected>与基本工资一致（默认）</option>
-              <option value="annual_package">年总包 ÷ 12</option>
-              <option value="custom">自定义金额</option>
-            </select>
-          </div>
-          <div class="input-wrap" id="socialBaseCustomWrap" hidden style="margin-top:8px">
-            <input type="number" id="socialBaseCustom" value="20000" min="0" step="100"><span class="suffix">元/月</span>
+          <div class="contribution-base-options" id="socialBaseMode">
+            <label class="contribution-base-option selected">
+              <input type="radio" name="socialBaseMode" value="salary" checked>
+              <span class="option-name">与基本工资一致</span><span class="option-badge">默认</span>
+            </label>
+            <label class="contribution-base-option">
+              <input type="radio" name="socialBaseMode" value="annual_package">
+              <span class="option-name">年总包 ÷ 12</span>
+            </label>
+            <label class="contribution-base-option">
+              <input type="radio" name="socialBaseMode" value="custom">
+              <span class="option-name">自定义金额</span>
+              <span class="custom-base-entry">
+                <input type="number" id="socialBaseCustom" value="20000" min="0" step="100" aria-label="自定义社保及公积金缴纳基数">
+                <span>元/月</span>
+              </span>
+            </label>
           </div>
           <div class="field-note" id="socialBaseHint">当前按基本工资 ¥20,000/月缴纳。</div>
         </div>
@@ -943,22 +968,28 @@
       num("stock") * firstYearStockRatio / 100;
   }
 
+  function selectedContributionBaseMode() {
+    const selected = document.querySelector('input[name="socialBaseMode"]:checked');
+    return selected ? selected.value : "salary";
+  }
+
   function contributionBaseAmount() {
-    const mode = $("socialBaseMode").value;
+    const mode = selectedContributionBaseMode();
     if (mode === "annual_package") return estimatedAnnualPackage() / 12;
     if (mode === "custom") return num("socialBaseCustom");
     return num("base");
   }
 
   function syncContributionBaseUI() {
-    const mode = $("socialBaseMode").value;
-    const custom = mode === "custom";
-    $("socialBaseCustomWrap").hidden = !custom;
+    const mode = selectedContributionBaseMode();
+    document.querySelectorAll(".contribution-base-option").forEach((option) => {
+      option.classList.toggle("selected", option.querySelector('input[type="radio"]').checked);
+    });
     if (mode === "annual_package") {
       const annualPackage = estimatedAnnualPackage();
       $("socialBaseHint").textContent = "年总包按 12 个月工资及补贴、目标年终奖和第 1 归属年股权合计：¥" +
         fmt(annualPackage) + " ÷ 12 = ¥" + fmt(annualPackage / 12) + "/月。";
-    } else if (custom) {
+    } else if (mode === "custom") {
       $("socialBaseHint").textContent = "当前按自定义金额 ¥" + fmt(num("socialBaseCustom")) + "/月缴纳。";
     } else {
       $("socialBaseHint").textContent = "当前按基本工资 ¥" + fmt(num("base")) + "/月缴纳。";
@@ -1020,7 +1051,7 @@
       endDate: $("endDate").value,
       range: bonusCalc.range,
       base: num("base"),
-      contributionBaseMode: $("socialBaseMode").value,
+      contributionBaseMode: selectedContributionBaseMode(),
       contributionBase: contributionBaseAmount(),
       housingPct: num("housingPct") / 100,
       specialDeduction: computeDeduction(),
@@ -1440,7 +1471,7 @@
       joinDate: $("joinDate").value,
       endDate: $("endDate").value,
       base: $("base").value,
-      socialBaseMode: $("socialBaseMode").value,
+      socialBaseMode: selectedContributionBaseMode(),
       socialBaseCustom: $("socialBaseCustom").value,
       housingPct: $("housingPct").value,
       deductions: deductionState, subsidy: $("subsidy").value,
@@ -1472,7 +1503,10 @@
     set("joinDate", data.joinDate);
     set("endDate", data.endDate);
     set("base", data.base);
-    set("socialBaseMode", data.socialBaseMode);
+    if (data.socialBaseMode) {
+      const mode = document.querySelector('input[name="socialBaseMode"][value="' + data.socialBaseMode + '"]');
+      if (mode) mode.checked = true;
+    }
     set("socialBaseCustom", data.socialBaseCustom);
     set("housingPct", data.housingPct);
     set("subsidy", data.subsidy);
@@ -1519,6 +1553,13 @@
     $("stockVestingYears").addEventListener("change", () => {
       stockVestingRatios = equalVestingRatios(parseInt($("stockVestingYears").value, 10) || 1);
       render();
+    });
+    $("socialBaseCustom").addEventListener("focus", () => {
+      const customMode = document.querySelector('input[name="socialBaseMode"][value="custom"]');
+      if (customMode && !customMode.checked) {
+        customMode.checked = true;
+        render();
+      }
     });
     $("stockVestingList").addEventListener("change", (event) => {
       const input = event.target.closest("[data-vesting-ratio]");
