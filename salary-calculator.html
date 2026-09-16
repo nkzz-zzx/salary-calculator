@@ -182,6 +182,39 @@
   .switch-label { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; cursor: pointer; color: #374151; }
   .switch-label input { accent-color: var(--accent); width: 16px; height: 16px; }
   .field-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .settings-menu-label { margin: 2px 0 8px; font-size: 13px; font-weight: 700; color: #374151; }
+  .settings-menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .settings-menu-card {
+    display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center;
+    min-height: 68px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px;
+    background: #fff; color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: .15s;
+  }
+  .settings-menu-card:hover { border-color: #bfdbfe; background: #f8fbff; }
+  .settings-menu-card.active { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px rgba(37,99,235,.08); }
+  .settings-menu-card .menu-title { font-size: 14px; font-weight: 700; }
+  .settings-menu-card .menu-summary { grid-column: 1; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .settings-menu-card .menu-arrow { grid-column: 2; grid-row: 1 / 3; color: var(--muted); font-size: 20px; transition: transform .15s; }
+  .settings-menu-card.active .menu-arrow { transform: rotate(90deg); color: var(--accent); }
+  .settings-panel { padding: 14px; margin-bottom: 14px; border: 1px solid var(--line); border-radius: 12px; background: #fbfcfe; }
+  .settings-panel[hidden] { display: none; }
+  .settings-panel > .field:last-child { margin-bottom: 0; }
+  @media (max-width: 560px) { .settings-menu-grid { grid-template-columns: 1fr; } }
+
+  .secondary-details { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
+  .secondary-details > summary, .section-details > summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    color: #374151; font-size: 13px; font-weight: 700; cursor: pointer; list-style: none;
+  }
+  .secondary-details > summary::-webkit-details-marker, .section-details > summary::-webkit-details-marker { display: none; }
+  .secondary-details > summary::after, .section-details > summary::after { content: "›"; color: var(--muted); font-size: 20px; transition: transform .15s; }
+  .secondary-details[open] > summary::after, .section-details[open] > summary::after { transform: rotate(90deg); }
+  .secondary-details-body { margin-top: 10px; }
+  .section-details > summary { font-size: 17px; }
+  .section-details > summary small { margin-left: auto; color: var(--muted); font-size: 12px; font-weight: 400; }
+  .section-details-body { margin-top: 12px; }
+  .assumption-details { margin-top: 4px; }
+  .assumption-details > summary { color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; }
+  .assumption-details .note { margin-top: 8px; }
   .vesting-list { display: grid; gap: 8px; margin-top: 8px; }
   .vesting-row {
     display: grid; grid-template-columns: minmax(150px, 1.25fr) minmax(120px, .8fr) minmax(110px, .8fr);
@@ -352,57 +385,10 @@
         </div>
       </div>
 
-      <div class="row2">
-        <div class="field">
-          <label>公积金系数 <span class="hint">（个人缴存比例，5%–12%）</span></label>
-          <div class="input-wrap"><input type="number" id="housingPct" value="12" min="5" max="12" step="1"><span class="suffix">%</span></div>
-          <div class="field-note">公积金按上方缴纳基数 × 个人缴存比例计算，单位按相同比例缴存。</div>
-        </div>
-        <div class="field">
-          <label>每月公积金提取金额（元/月）</label>
-          <div class="input-wrap"><input type="number" id="housingWithdraw" value="0" min="0" step="100"><span class="suffix">元</span></div>
-          <div class="field-note">从公积金账户提取，计入当月可支配结余。</div>
-        </div>
-      </div>
-
       <div class="field">
         <label>补贴性收入（元/月）</label>
         <div class="input-wrap"><input type="number" id="subsidy" value="0" min="0" step="100"><span class="suffix">元</span></div>
       </div>
-
-      <div class="field">
-        <label>股票 / 股权激励类别</label>
-        <div class="input-wrap">
-          <select id="stockType">
-            <option value="ordinary" selected>普通股票或现金激励（并入综合所得）</option>
-            <option value="listed_stock">上市公司股票 / RSU / 限制性股票（单独计税）</option>
-            <option value="listed_option">上市公司股票期权 / 增值权（单独计税）</option>
-            <option value="deferred">非上市公司股权 / 期权（符合条件时递延纳税）</option>
-          </select>
-        </div>
-      </div>
-      <div class="row2">
-        <div class="field">
-          <label id="stockAmountLabel">股票 / 股权激励总额</label>
-          <div class="input-wrap"><input type="number" id="stock" value="0" min="0" step="1000"><span class="suffix">元</span></div>
-        </div>
-        <div class="field">
-          <label>分几年归属</label>
-          <div class="input-wrap">
-            <select id="stockVestingYears">
-              <option value="1">1 年</option><option value="2">2 年</option><option value="3">3 年</option>
-              <option value="4" selected>4 年</option><option value="5">5 年</option><option value="6">6 年</option>
-              <option value="7">7 年</option><option value="8">8 年</option><option value="9">9 年</option><option value="10">10 年</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="field">
-        <label>每年归属比例 <span class="hint">（合计应为 100%）</span></label>
-        <div class="vesting-list" id="stockVestingList"></div>
-        <div class="field-note" id="stockVestingTotal"></div>
-      </div>
-      <div class="field-note" id="stockHint" style="margin-top:-8px;margin-bottom:14px"></div>
 
       <div class="field">
         <label>年终奖 <span class="hint">（按金额或按 N 个月工资）</span></label>
@@ -441,26 +427,111 @@
         <div class="field-note" id="bonusHint">本年预计年终奖 = ¥30,000</div>
       </div>
 
-      <div class="field">
-        <label>专项附加扣除 <span class="hint">（勾选后展开二级选项，金额自动计算）</span></label>
-        <div class="ded-list" id="deductionList"></div>
-        <div class="ded-total">专项附加扣除合计（元/月）<b id="dedTotal">¥0</b></div>
+      <div class="settings-menu-label">更多设置</div>
+      <div class="settings-menu-grid" id="settingsMenu">
+        <button type="button" class="settings-menu-card" data-settings-panel="housing" aria-expanded="false" aria-controls="settingsPanelHousing">
+          <span class="menu-title">公积金设置</span><span class="menu-summary" id="housingMenuSummary">比例 12% · 未提取</span><span class="menu-arrow">›</span>
+        </button>
+        <button type="button" class="settings-menu-card" data-settings-panel="stock" aria-expanded="false" aria-controls="settingsPanelStock">
+          <span class="menu-title">股票 / 股权</span><span class="menu-summary" id="stockMenuSummary">未设置</span><span class="menu-arrow">›</span>
+        </button>
+        <button type="button" class="settings-menu-card" data-settings-panel="deductions" aria-expanded="false" aria-controls="settingsPanelDeductions">
+          <span class="menu-title">扣除与养老金</span><span class="menu-summary" id="deductionMenuSummary">未设置</span><span class="menu-arrow">›</span>
+        </button>
+        <button type="button" class="settings-menu-card" data-settings-panel="consumption" aria-expanded="false" aria-controls="settingsPanelConsumption">
+          <span class="menu-title">消费支出</span><span class="menu-summary" id="consumptionMenuSummary">固定 ¥8,000/月</span><span class="menu-arrow">›</span>
+        </button>
       </div>
 
-      <div class="field">
-        <label>个人养老金 <span class="hint">（递延纳税）</span></label>
-        <div class="pension-row">
-          <label class="switch-label"><input type="checkbox" id="pensionEnabled"> 参加个人养老金</label>
-          <div class="input-wrap" id="pensionAmountWrap" hidden style="max-width:220px">
-            <input type="number" id="pensionAmount" value="12000" min="0" max="12000" step="1000"><span class="suffix">元/年</span>
+      <div class="settings-panel" id="settingsPanelHousing" data-settings-content="housing" hidden>
+        <div class="row2">
+          <div class="field">
+            <label>公积金系数 <span class="hint">（个人缴存比例，5%–12%）</span></label>
+            <div class="input-wrap"><input type="number" id="housingPct" value="12" min="5" max="12" step="1"><span class="suffix">%</span></div>
+            <div class="field-note">公积金按缴纳基数 × 个人缴存比例计算，单位按相同比例缴存。</div>
+          </div>
+          <div class="field">
+            <label>每月公积金提取金额（元/月）</label>
+            <div class="input-wrap"><input type="number" id="housingWithdraw" value="0" min="0" step="100"><span class="suffix">元</span></div>
+            <div class="field-note">从公积金账户提取，计入当月可支配结余。</div>
           </div>
         </div>
-        <div class="field-note">每年最高 12000 元，可在综合所得中税前扣除，领取时按 3% 缴税。此处按全年金额平均分摊到 12 个月。</div>
       </div>
 
-      <div class="note">
-        <b>计算假设：</b>完整年总包按一个完整自然年度的 1—12 月计算，年终奖不做时间折算；实际在职区间按自然日在职天数折算起止月工资、五险一金及年终奖。股票 / 股权按所选比例逐年归属：完整年模式从首个完整年度算第 1 归属年，区间模式按入职周年日归属，并按类别决定合并、单独或递延计税。五险一金个人部分按统一缴纳基数计算：养老 8% + 医疗 2% + 失业 0.5% + 公积金（按系数），未考虑各地缴费基数上下限。股票与年终奖不重复缴纳五险一金。
+      <div class="settings-panel" id="settingsPanelStock" data-settings-content="stock" hidden>
+        <div class="field">
+          <label>股票 / 股权激励类别</label>
+          <div class="input-wrap">
+            <select id="stockType">
+              <option value="ordinary" selected>普通股票或现金激励（并入综合所得）</option>
+              <option value="listed_stock">上市公司股票 / RSU / 限制性股票（单独计税）</option>
+              <option value="listed_option">上市公司股票期权 / 增值权（单独计税）</option>
+              <option value="deferred">非上市公司股权 / 期权（符合条件时递延纳税）</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label id="stockAmountLabel">股票 / 股权激励总额</label>
+            <div class="input-wrap"><input type="number" id="stock" value="0" min="0" step="1000"><span class="suffix">元</span></div>
+          </div>
+          <div class="field">
+            <label>分几年归属</label>
+            <div class="input-wrap">
+              <select id="stockVestingYears">
+                <option value="1">1 年</option><option value="2">2 年</option><option value="3">3 年</option>
+                <option value="4" selected>4 年</option><option value="5">5 年</option><option value="6">6 年</option>
+                <option value="7">7 年</option><option value="8">8 年</option><option value="9">9 年</option><option value="10">10 年</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>每年归属比例 <span class="hint">（合计应为 100%）</span></label>
+          <div class="vesting-list" id="stockVestingList"></div>
+          <div class="field-note" id="stockVestingTotal"></div>
+        </div>
+        <div class="field-note" id="stockHint"></div>
       </div>
+
+      <div class="settings-panel" id="settingsPanelDeductions" data-settings-content="deductions" hidden>
+        <div class="field">
+          <label>专项附加扣除 <span class="hint">（勾选后展开二级选项，金额自动计算）</span></label>
+          <div class="ded-list" id="deductionList"></div>
+          <div class="ded-total">专项附加扣除合计（元/月）<b id="dedTotal">¥0</b></div>
+        </div>
+        <div class="field">
+          <label>个人养老金 <span class="hint">（递延纳税）</span></label>
+          <div class="pension-row">
+            <label class="switch-label"><input type="checkbox" id="pensionEnabled"> 参加个人养老金</label>
+            <div class="input-wrap" id="pensionAmountWrap" hidden style="max-width:220px">
+              <input type="number" id="pensionAmount" value="12000" min="0" max="12000" step="1000"><span class="suffix">元/年</span>
+            </div>
+          </div>
+          <div class="field-note">每年最高 12000 元，可在综合所得中税前扣除，领取时按 3% 缴税。此处按全年金额平均分摊到 12 个月。</div>
+        </div>
+      </div>
+
+      <div class="settings-panel" id="settingsPanelConsumption" data-settings-content="consumption" hidden>
+        <div class="row2">
+          <div class="field">
+            <label>每月固定消费（元/月）</label>
+            <div class="input-wrap"><input type="number" id="fixedConsumption" value="8000" min="0" step="100"><span class="suffix">元</span></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:13px; font-weight:600; color:#374151; margin-bottom:8px">特定月份额外开支</div>
+          <div id="extraList"></div>
+          <button class="btn" id="addExtra" type="button">+ 添加额外开支</button>
+        </div>
+      </div>
+
+      <details class="assumption-details">
+        <summary>查看计算口径与假设</summary>
+        <div class="note">
+          完整年总包按一个完整自然年度的 1—12 月计算，年终奖不做时间折算；实际在职区间按自然日在职天数折算起止月工资、五险一金及年终奖。股票 / 股权按所选比例逐年归属：完整年模式从首个完整年度算第 1 归属年，区间模式按入职周年日归属，并按类别决定合并、单独或递延计税。五险一金个人部分按统一缴纳基数计算：养老 8% + 医疗 2% + 失业 0.5% + 公积金（按系数），未考虑各地缴费基数上下限。股票与年终奖不重复缴纳五险一金。
+        </div>
+      </details>
     </section>
 
     <!-- ===================== 年终奖方案 ===================== -->
@@ -503,49 +574,36 @@
         </div>
       </div>
 
-      <div class="bd-title">年终奖方案税负拆解</div>
-      <div class="bd-scroll">
-        <table class="bd-table">
-          <thead>
-            <tr><th>方案</th><th>单独计税金额</th><th>合并计税金额</th><th>合并部分增量税</th><th>单独计税税额</th><th>年终奖税额合计</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>全部单独</td><td id="bd-sep-amount">—</td><td id="bd-sep-merged">—</td><td id="bd-sep-comp">—</td><td id="bd-sep-bonus">—</td><td id="bd-sep-total">—</td></tr>
-            <tr><td>全部合并</td><td id="bd-mer-amount">—</td><td id="bd-mer-merged">—</td><td id="bd-mer-comp">—</td><td id="bd-mer-bonus">—</td><td id="bd-mer-total">—</td></tr>
-            <tr class="bd-rec"><td>混合（规划）</td><td id="bd-mix-amount">—</td><td id="bd-mix-merged">—</td><td id="bd-mix-comp">—</td><td id="bd-mix-bonus">—</td><td id="bd-mix-total">—</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <p class="field-note">混合方案用于发放规划测算；同一笔全年一次性奖金申报时不能拆分，需整体选择单独计税或并入综合所得。</p>
-
-      <p class="sub" style="margin-top:12px; margin-bottom:0">
-        年终奖及符合条件的上市公司股权激励单独计税政策均延续至 <b>2027年12月31日</b>（财政部、税务总局公告 2023 年第 30 号、第 25 号）。
-      </p>
-    </section>
-
-    <!-- ===================== 消费支出 ===================== -->
-    <section class="card col-12">
-      <h2>③ 每月消费支出</h2>
-      <p class="sub">设置固定月消费，并可为特定月份增加额外开支</p>
-      <div class="row2" style="max-width:520px">
-        <div class="field">
-          <label>每月固定消费（元/月）</label>
-          <div class="input-wrap"><input type="number" id="fixedConsumption" value="8000" min="0" step="100"><span class="suffix">元</span></div>
+      <details class="secondary-details">
+        <summary>查看年终奖方案税负拆解</summary>
+        <div class="secondary-details-body">
+          <div class="bd-scroll">
+            <table class="bd-table">
+              <thead>
+                <tr><th>方案</th><th>单独计税金额</th><th>合并计税金额</th><th>合并部分增量税</th><th>单独计税税额</th><th>年终奖税额合计</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>全部单独</td><td id="bd-sep-amount">—</td><td id="bd-sep-merged">—</td><td id="bd-sep-comp">—</td><td id="bd-sep-bonus">—</td><td id="bd-sep-total">—</td></tr>
+                <tr><td>全部合并</td><td id="bd-mer-amount">—</td><td id="bd-mer-merged">—</td><td id="bd-mer-comp">—</td><td id="bd-mer-bonus">—</td><td id="bd-mer-total">—</td></tr>
+                <tr class="bd-rec"><td>混合（规划）</td><td id="bd-mix-amount">—</td><td id="bd-mix-merged">—</td><td id="bd-mix-comp">—</td><td id="bd-mix-bonus">—</td><td id="bd-mix-total">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="field-note">混合方案用于发放规划测算；同一笔全年一次性奖金申报时不能拆分，需整体选择单独计税或并入综合所得。</p>
+          <p class="sub" style="margin-top:12px; margin-bottom:0">年终奖及符合条件的上市公司股权激励单独计税政策均延续至 <b>2027年12月31日</b>（财政部、税务总局公告 2023 年第 30 号、第 25 号）。</p>
         </div>
-      </div>
-      <div style="margin-top:6px">
-        <div style="font-size:13px; font-weight:600; color:#374151; margin-bottom:8px">特定月份额外开支</div>
-        <div id="extraList"></div>
-        <button class="btn" id="addExtra" type="button">+ 添加额外开支</button>
-      </div>
+      </details>
     </section>
 
     <!-- ===================== 范围概览 ===================== -->
     <section class="card col-12">
-      <h2>④ 范围概览</h2>
+      <h2>③ 计算结果</h2>
       <p class="sub">所选日期范围内的收入、个税、五险一金与消费汇总</p>
       <div class="kpis" id="kpis"></div>
+      <details class="secondary-details">
+        <summary>查看账户、税负与支出明细</summary>
+        <div class="secondary-details-body"><div class="kpis" id="secondaryKpis"></div></div>
+      </details>
       <div class="bar-wrap"><div class="bar" id="annualBar"></div></div>
       <div class="legend">
         <span><i style="background:#16a34a"></i>税后收入</span>
@@ -556,31 +614,33 @@
     </section>
 
     <!-- ===================== 月度明细 ===================== -->
-    <section class="card col-12">
-      <h2>⑤ 月度明细</h2>
-      <p class="sub" id="monthlyRangeHint">按累计预扣法逐月计算；跨年时每年 1 月重新累计，最多展示最近 24 个月</p>
-      <div class="table-scroll">
-        <table id="monthlyTable">
-          <thead>
-            <tr>
-              <th>月份</th>
-              <th>税前收入</th>
-              <th>五险一金</th>
-              <th>专项扣除</th>
-              <th>个人养老金</th>
-              <th>起征点</th>
-              <th>当年累计应纳税所得额</th>
-              <th>个税</th>
-              <th>税后收入</th>
-              <th>公积金提取</th>
-              <th>消费支出</th>
-              <th>结余</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+    <details class="card col-12 section-details">
+      <summary><span>④ 月度明细</span><small>按需展开 · 最多展示最近 24 个月</small></summary>
+      <div class="section-details-body">
+        <p class="sub" id="monthlyRangeHint">按累计预扣法逐月计算；跨年时每年 1 月重新累计，最多展示最近 24 个月</p>
+        <div class="table-scroll">
+          <table id="monthlyTable">
+            <thead>
+              <tr>
+                <th>月份</th>
+                <th>税前收入</th>
+                <th>五险一金</th>
+                <th>专项扣除</th>
+                <th>个人养老金</th>
+                <th>起征点</th>
+                <th>当年累计应纳税所得额</th>
+                <th>个税</th>
+                <th>税后收入</th>
+                <th>公积金提取</th>
+                <th>消费支出</th>
+                <th>结余</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
-    </section>
+    </details>
 
   </div>
 </main>
@@ -1029,6 +1089,30 @@
     }
   }
 
+  function syncSettingsMenuSummaries(inputs) {
+    const withdrawal = inputs.housingWithdraw > 0 ? "提取 ¥" + fmt(inputs.housingWithdraw) + "/月" : "未提取";
+    $("housingMenuSummary").textContent = "比例 " + fmt2(inputs.housingPct * 100) + "% · " + withdrawal;
+
+    const stockTypeLabels = {
+      ordinary: "普通激励",
+      listed_stock: "上市股权",
+      listed_option: "上市期权",
+      deferred: "递延股权",
+    };
+    $("stockMenuSummary").textContent = inputs.stock > 0
+      ? (stockTypeLabels[inputs.stockType] || "股权激励") + " ¥" + fmt(inputs.stock) + " · " + inputs.stockVestingYears + " 年归属"
+      : "未设置";
+
+    const deductionParts = [];
+    if (inputs.specialDeduction > 0) deductionParts.push("专项扣除 ¥" + fmt(inputs.specialDeduction) + "/月");
+    if (inputs.personalPension > 0) deductionParts.push("养老金 ¥" + fmt(inputs.personalPension) + "/年");
+    $("deductionMenuSummary").textContent = deductionParts.length ? deductionParts.join(" · ") : "未设置";
+
+    const extraCount = inputs.extras.length;
+    $("consumptionMenuSummary").textContent = "固定 ¥" + fmt(inputs.fixedConsumption) + "/月" +
+      (extraCount ? " · 额外 " + extraCount + " 笔" : "");
+  }
+
   function syncBonusAndPensionUI() {
     const calculationMode = currentCalculationMode();
     const annualMode = calculationMode === "annual";
@@ -1286,6 +1370,7 @@
   function render() {
     syncBonusAndPensionUI();
     const inputs = readInputs();
+    syncSettingsMenuSummaries(inputs);
     const baseline = compute(inputs, { mode: "separate", separate: inputs.bonus, merged: 0 });
     const opt = optimizeBonus(inputs.bonus, baseline.otherTaxable);
     const split = getSplit(inputs.bonus, opt);
@@ -1335,12 +1420,13 @@
       kpi("期间税前收入", "¥" + fmt(r.annualIncome), "含工资、股票及最近一次年终奖") +
       kpi("期间税后收入", "¥" + fmt(r.afterTax), "税前 − 五险一金 − 个税", "green") +
       kpi("期间个税", "¥" + fmt(r.totalTax), "综合所得、股权激励与年终奖合计", "red") +
+      kpi("期间净结余", "¥" + fmt(r.net), "税后收入 + 公积金提取 − 消费", r.net >= 0 ? "green" : "red");
+    $("secondaryKpis").innerHTML =
       kpi("期间公积金（含单位）", "¥" + fmt(r.annualHousingAccount), "个人+单位缴存，期间提取 ¥" + fmt(r.annualWithdrawal)) +
       kpi("期间养老金个人账户", "¥" + fmt(r.annualPensionAccount), "社保个人缴存 8%") +
       kpi("期间医疗保险个人账户", "¥" + fmt(r.annualMedicalAccount), "社保个人缴存 2%") +
       kpi("期间个人养老金", "¥" + fmt(r.personalPension), "按月折算，单个自然年最高 1.2 万") +
       kpi("期间消费支出", "¥" + fmt(r.annualConsumption), "固定 + 额外开支") +
-      kpi("期间净结余", "¥" + fmt(r.net), "税后收入 + 公积金提取 − 消费", r.net >= 0 ? "green" : "red") +
       kpi("实际税负率", effRate.toFixed(2) + "%", "个税 / 税前收入", "hl");
 
     // 年度收入构成条
@@ -1613,6 +1699,23 @@
     });
     document.addEventListener("click", (event) => {
       if (!event.target.closest("#socialBasePicker")) closeContributionBaseMenu();
+    });
+    document.querySelectorAll("[data-settings-panel]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = button.dataset.settingsPanel;
+        const panel = document.querySelector('[data-settings-content="' + target + '"]');
+        const willOpen = panel && panel.hidden;
+        document.querySelectorAll("[data-settings-content]").forEach((content) => { content.hidden = true; });
+        document.querySelectorAll("[data-settings-panel]").forEach((item) => {
+          item.classList.remove("active");
+          item.setAttribute("aria-expanded", "false");
+        });
+        if (willOpen) {
+          panel.hidden = false;
+          button.classList.add("active");
+          button.setAttribute("aria-expanded", "true");
+        }
+      });
     });
     $("stockVestingList").addEventListener("change", (event) => {
       const input = event.target.closest("[data-vesting-ratio]");
