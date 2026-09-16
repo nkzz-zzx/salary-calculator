@@ -109,6 +109,7 @@
     display: flex; align-items: center; gap: 8px; flex: 1; align-self: stretch; min-width: 0;
     padding: 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer;
   }
+  .contribution-base-summary.custom-mode .summary-main { flex: 0 0 auto; }
   .contribution-base-summary .summary-main:focus-visible, .contribution-base-summary .summary-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 5px; }
   .contribution-base-summary .summary-name { font-size: 14px; font-weight: 600; white-space: nowrap; }
   .contribution-base-summary .option-badge { font-size: 11px; color: var(--muted); }
@@ -129,7 +130,7 @@
   .contribution-base-choice:hover, .contribution-base-choice.selected { background: var(--accent-soft); color: var(--accent); }
   .contribution-base-choice .choice-mark { width: 16px; color: transparent; }
   .contribution-base-choice.selected .choice-mark { color: var(--accent); }
-  .custom-base-entry { position: relative; flex: 1 1 100px; min-width: 100px; max-width: 170px; margin-left: auto; }
+  .custom-base-entry { position: relative; flex: 1 1 100px; min-width: 100px; max-width: 150px; margin-left: auto; }
   .custom-base-entry input {
     width: 100%; padding: 7px 48px 7px 9px; border: 1px solid var(--line); border-radius: 8px;
     font-size: 14px; color: var(--text); background: #fff;
@@ -1009,7 +1010,7 @@
       custom: "自定义金额",
     };
     $("socialBaseSummaryName").textContent = labels[mode] || labels.salary;
-    $("socialBaseSummaryButton").hidden = mode === "custom";
+    $("socialBaseSummary").classList.toggle("custom-mode", mode === "custom");
     $("socialBaseSummaryBadge").hidden = mode !== "salary";
     $("socialBaseCustomEntry").hidden = mode !== "custom";
     document.querySelectorAll("[data-contribution-mode]").forEach((choice) => {
@@ -1598,6 +1599,10 @@
     };
     $("socialBaseSummaryButton").addEventListener("click", toggleContributionBaseMenu);
     $("socialBaseToggleButton").addEventListener("click", toggleContributionBaseMenu);
+    $("socialBaseSummary").addEventListener("click", (event) => {
+      if (event.target.closest("button") || event.target.closest("input")) return;
+      toggleContributionBaseMenu();
+    });
     document.querySelectorAll("[data-contribution-mode]").forEach((choice) => {
       choice.addEventListener("click", () => {
         $("socialBaseMode").value = choice.dataset.contributionMode;
