@@ -268,12 +268,7 @@
           <label class="bt-opt selected"><input type="radio" name="calculationMode" value="annual" checked>完整年总包</label>
           <label class="bt-opt"><input type="radio" name="calculationMode" value="interval">实际在职区间</label>
         </div>
-        <div class="field-note" id="calculationModeHint">按所选年份 1—12 月计算，不对年终奖做时间折算。</div>
-      </div>
-
-      <div class="field" id="annualYearField">
-        <label>计算年份</label>
-        <div class="input-wrap"><input type="number" id="calculationYear" min="2000" max="2100" step="1"><span class="suffix">年</span></div>
+        <div class="field-note" id="calculationModeHint">按完整自然年度的 1—12 月计算，不对年终奖做时间折算。</div>
       </div>
 
       <div class="row2" id="intervalDateFields" hidden>
@@ -294,15 +289,32 @@
           <div class="input-wrap"><input type="number" id="base" value="20000" min="0" step="100"><span class="suffix">元</span></div>
         </div>
         <div class="field">
-          <label>公积金系数 <span class="hint">（个人缴存比例，5%–12%）</span></label>
-          <div class="input-wrap"><input type="number" id="housingPct" value="12" min="5" max="12" step="1"><span class="suffix">%</span></div>
+          <label>社保及公积金缴纳基数</label>
+          <div class="input-wrap">
+            <select id="socialBaseMode">
+              <option value="salary" selected>与基本工资一致（默认）</option>
+              <option value="annual_package">年总包 ÷ 12</option>
+              <option value="custom">自定义金额</option>
+            </select>
+          </div>
+          <div class="input-wrap" id="socialBaseCustomWrap" hidden style="margin-top:8px">
+            <input type="number" id="socialBaseCustom" value="20000" min="0" step="100"><span class="suffix">元/月</span>
+          </div>
+          <div class="field-note" id="socialBaseHint">当前按基本工资 ¥20,000/月缴纳。</div>
         </div>
       </div>
 
-      <div class="field">
-        <label>每月公积金提取金额（元/月）</label>
-        <div class="input-wrap"><input type="number" id="housingWithdraw" value="0" min="0" step="100"><span class="suffix">元</span></div>
-        <div class="field-note">每月从公积金账户提取的现金，计入当月结余（可支配现金），公积金账户余额相应减少。</div>
+      <div class="row2">
+        <div class="field">
+          <label>公积金系数 <span class="hint">（个人缴存比例，5%–12%）</span></label>
+          <div class="input-wrap"><input type="number" id="housingPct" value="12" min="5" max="12" step="1"><span class="suffix">%</span></div>
+          <div class="field-note">公积金按上方缴纳基数 × 个人缴存比例计算，单位按相同比例缴存。</div>
+        </div>
+        <div class="field">
+          <label>每月公积金提取金额（元/月）</label>
+          <div class="input-wrap"><input type="number" id="housingWithdraw" value="0" min="0" step="100"><span class="suffix">元</span></div>
+          <div class="field-note">从公积金账户提取，计入当月可支配结余。</div>
+        </div>
       </div>
 
       <div class="field">
@@ -399,7 +411,7 @@
       </div>
 
       <div class="note">
-        <b>计算假设：</b>完整年总包按所选年份 1—12 月计算，年终奖不做时间折算；实际在职区间按自然日在职天数折算起止月工资、五险一金及年终奖。股票 / 股权按所选比例逐年归属：完整年模式从所选年份算第 1 归属年，区间模式按入职周年日归属，并按类别决定合并、单独或递延计税。五险一金个人部分按养老 8% + 医疗 2% + 失业 0.5% + 公积金（按系数）计算，缴费基数取基本工资，未考虑各地社保基数上下限。股票与年终奖不重复缴纳五险一金。
+        <b>计算假设：</b>完整年总包按一个完整自然年度的 1—12 月计算，年终奖不做时间折算；实际在职区间按自然日在职天数折算起止月工资、五险一金及年终奖。股票 / 股权按所选比例逐年归属：完整年模式从首个完整年度算第 1 归属年，区间模式按入职周年日归属，并按类别决定合并、单独或递延计税。五险一金个人部分按统一缴纳基数计算：养老 8% + 医疗 2% + 失业 0.5% + 公积金（按系数），未考虑各地缴费基数上下限。股票与年终奖不重复缴纳五险一金。
       </div>
     </section>
 
@@ -576,8 +588,8 @@
     const b = MONTHLY_BRACKETS.find((x) => monthly <= x.max);
     return Math.max(0, bonus * b.rate - b.quick);
   }
-  function monthlySI(base, housingRate) {
-    return base * (SI_RATES.pension + SI_RATES.medical + SI_RATES.unemployment) + base * housingRate;
+  function monthlySI(contributionBase, housingRate) {
+    return contributionBase * (SI_RATES.pension + SI_RATES.medical + SI_RATES.unemployment + housingRate);
   }
 
   const fmt = (n) =>
@@ -644,15 +656,9 @@
     return selected ? selected.value : "annual";
   }
 
-  function selectedCalculationYear() {
-    const year = parseInt($("calculationYear").value, 10);
-    return year >= 2000 && year <= 2100 ? year : CALCULATION_YEAR;
-  }
-
   function activeCalculationRange() {
     if (currentCalculationMode() === "annual") {
-      const year = selectedCalculationYear();
-      return buildRange(year + "-01-01", year + "-12-31");
+      return buildRange(CALCULATION_YEAR + "-01-01", CALCULATION_YEAR + "-12-31");
     }
     return buildRange($("joinDate").value, $("endDate").value);
   }
@@ -707,9 +713,9 @@
     const totalStock = num("stock");
     $("stockVestingList").innerHTML = stockVestingRatios.map((ratio, index) => {
       const vestDate = mode === "annual"
-        ? { year: selectedCalculationYear() + index, month: 12, day: 31 }
+        ? { year: CALCULATION_YEAR + index, month: 12, day: 31 }
         : anniversaryDate(start, index + 1);
-      const vestLabel = mode === "annual" ? vestDate.year + " 年度归属" : dateLabel(vestDate) + " 归属";
+      const vestLabel = mode === "annual" ? "第 " + (index + 1) + " 归属年" : dateLabel(vestDate) + " 归属";
       return '<div class="vesting-row">' +
         '<div class="vesting-year">第 ' + (index + 1) + ' 年<small>' + vestLabel + '</small></div>' +
         '<div class="vesting-ratio"><input type="number" min="0" max="100" step="0.01" value="' + ratio + '" data-vesting-ratio="' + index + '" aria-label="第 ' + (index + 1) + ' 年归属比例"><span>%</span></div>' +
@@ -721,7 +727,7 @@
     totalEl.classList.toggle("error", Math.abs(total - 100) > 0.005);
     totalEl.textContent = Math.abs(total - 100) <= 0.005
       ? (mode === "annual"
-        ? "合计 100%；第 1 归属年从计算年份开始，月度明细统一计入当年 12 月。"
+        ? "合计 100%；第 1 归属年计入首个完整年度的 12 月，后续逐年顺延。"
         : "合计 100%；归属周期从入职日开始，达到周年日后计入计算范围。")
       : "当前合计 " + fmt2(total) + "%（应为 100%）；计算将按当前比例进行。";
   }
@@ -930,17 +936,46 @@
     renderStockVestingSchedule();
   }
 
+  function estimatedAnnualPackage() {
+    const firstYearStockRatio = stockVestingRatios.length ? stockVestingRatios[0] : 0;
+    return (num("base") + num("subsidy")) * 12 +
+      statedBonus() +
+      num("stock") * firstYearStockRatio / 100;
+  }
+
+  function contributionBaseAmount() {
+    const mode = $("socialBaseMode").value;
+    if (mode === "annual_package") return estimatedAnnualPackage() / 12;
+    if (mode === "custom") return num("socialBaseCustom");
+    return num("base");
+  }
+
+  function syncContributionBaseUI() {
+    const mode = $("socialBaseMode").value;
+    const custom = mode === "custom";
+    $("socialBaseCustomWrap").hidden = !custom;
+    if (mode === "annual_package") {
+      const annualPackage = estimatedAnnualPackage();
+      $("socialBaseHint").textContent = "年总包按 12 个月工资及补贴、目标年终奖和第 1 归属年股权合计：¥" +
+        fmt(annualPackage) + " ÷ 12 = ¥" + fmt(annualPackage / 12) + "/月。";
+    } else if (custom) {
+      $("socialBaseHint").textContent = "当前按自定义金额 ¥" + fmt(num("socialBaseCustom")) + "/月缴纳。";
+    } else {
+      $("socialBaseHint").textContent = "当前按基本工资 ¥" + fmt(num("base")) + "/月缴纳。";
+    }
+  }
+
   function syncBonusAndPensionUI() {
     const calculationMode = currentCalculationMode();
     const annualMode = calculationMode === "annual";
-    $("annualYearField").hidden = !annualMode;
     $("intervalDateFields").hidden = annualMode;
     $("employmentHint").hidden = annualMode;
     $("bonusProrationField").hidden = annualMode;
     $("calculationModeHint").textContent = annualMode
-      ? "按 " + selectedCalculationYear() + " 年 1—12 月计算，不对年终奖做时间折算。"
+      ? "按完整自然年度的 1—12 月计算，不对年终奖做时间折算。"
       : "按实际入职日至截止日计算，起止月工资及年终奖会按规则折算。";
     syncStockUI();
+    syncContributionBaseUI();
     const type = document.querySelector('input[name="bonusType"]:checked').value;
     $("bonusAmountField").hidden = type !== "amount";
     $("bonusMonthsField").hidden = type !== "months";
@@ -980,11 +1015,13 @@
     const bonusCalc = bonusCalculation();
     return {
       calculationMode: currentCalculationMode(),
-      calculationYear: selectedCalculationYear(),
+      calculationYear: CALCULATION_YEAR,
       joinDate: $("joinDate").value,
       endDate: $("endDate").value,
       range: bonusCalc.range,
       base: num("base"),
+      contributionBaseMode: $("socialBaseMode").value,
+      contributionBase: contributionBaseAmount(),
       housingPct: num("housingPct") / 100,
       specialDeduction: computeDeduction(),
       subsidy: num("subsidy"),
@@ -1033,7 +1070,7 @@
 
   // ---------- 核心计算 ----------
   function compute(inputs, split) {
-    const monthlySIVal = monthlySI(inputs.base, inputs.housingPct);
+    const monthlySIVal = monthlySI(inputs.contributionBase, inputs.housingPct);
     const monthlySalary = inputs.base + inputs.subsidy;
     const pensionMonthly = inputs.personalPension / 12;
     const rangeMonths = inputs.range.valid ? inputs.range.months : [];
@@ -1092,9 +1129,9 @@
     const annualSI = monthlySIVal * serviceMonthEquivalent;
     const afterTax = annualIncome - annualSI - totalTax;
     // 个人账户拆解：养老个人账户 8%、医疗个人账户 2%、公积金个人+单位各按系数
-    const annualPensionAccount = inputs.base * 0.08 * serviceMonthEquivalent;
-    const annualMedicalAccount = inputs.base * 0.02 * serviceMonthEquivalent;
-    const annualHousingAccount = inputs.base * inputs.housingPct * 2 * serviceMonthEquivalent;
+    const annualPensionAccount = inputs.contributionBase * 0.08 * serviceMonthEquivalent;
+    const annualMedicalAccount = inputs.contributionBase * 0.02 * serviceMonthEquivalent;
+    const annualHousingAccount = inputs.contributionBase * inputs.housingPct * 2 * serviceMonthEquivalent;
     const personalPension = pensionMonthly * rangeMonths.length;
 
     // 逐月（股权在入职周年日归属；年终奖仅在范围内最近一次发放）
@@ -1280,10 +1317,13 @@
     const visible = all.slice(-24);
     const first = visible[0];
     const last = visible[visible.length - 1];
+    const annualMode = inputs.calculationMode === "annual";
     const visibleRange = first.year + " 年 " + first.month + " 月至 " + last.year + " 年 " + last.month + " 月";
-    $("monthlyRangeHint").textContent = all.length > 24
-      ? "共计算 " + all.length + " 个月，以下仅展示最近 24 个月（" + visibleRange + "）；跨年时每年 1 月重新累计"
-      : "共计算 " + all.length + " 个月（" + visibleRange + "）；跨年时每年 1 月重新累计";
+    $("monthlyRangeHint").textContent = annualMode
+      ? "完整年总包，共 12 个月（1 月至 12 月）"
+      : all.length > 24
+        ? "共计算 " + all.length + " 个月，以下仅展示最近 24 个月（" + visibleRange + "）；跨年时每年 1 月重新累计"
+        : "共计算 " + all.length + " 个月（" + visibleRange + "）；跨年时每年 1 月重新累计";
 
     const stockMode = stockTaxMode(inputs.stockType);
     const listNote = (parts) => parts.map((part, index) =>
@@ -1322,7 +1362,7 @@
           ? "<br><span class='taxable-note'>" + singleNote("转让环节税款未估算") + "</span>"
           : "";
       html += "<tr>" +
-        "<td>" + m.year + " 年 " + m.month + " 月</td>" +
+        "<td>" + (annualMode ? m.month + " 月" : m.year + " 年 " + m.month + " 月") + "</td>" +
         "<td>" + incomeTags + "¥" + fmt(m.income) + "<br><span class='taxable-note'>" + sumNote(incomeParts) + "</span></td>" +
         "<td>¥" + fmt(m.monthlySIVal) + "</td>" +
         "<td>¥" + fmt(m.specialDeduction) + "</td>" +
@@ -1397,10 +1437,12 @@
   function saveState() {
     const data = {
       calculationMode: currentCalculationMode(),
-      calculationYear: $("calculationYear").value,
       joinDate: $("joinDate").value,
       endDate: $("endDate").value,
-      base: $("base").value, housingPct: $("housingPct").value,
+      base: $("base").value,
+      socialBaseMode: $("socialBaseMode").value,
+      socialBaseCustom: $("socialBaseCustom").value,
+      housingPct: $("housingPct").value,
       deductions: deductionState, subsidy: $("subsidy").value,
       stock: $("stock").value, stockType: $("stockType").value,
       stockVestingYears: $("stockVestingYears").value,
@@ -1423,14 +1465,16 @@
     try { data = JSON.parse(localStorage.getItem("salaryCalc")); } catch (e) {}
     if (!data) return;
     const set = (id, v) => { if (v !== undefined && v !== null) $(id).value = v; };
-    set("calculationYear", data.calculationYear);
     if (data.calculationMode) {
       const mode = document.querySelector('input[name="calculationMode"][value="' + data.calculationMode + '"]');
       if (mode) mode.checked = true;
     }
     set("joinDate", data.joinDate);
     set("endDate", data.endDate);
-    set("base", data.base); set("housingPct", data.housingPct);
+    set("base", data.base);
+    set("socialBaseMode", data.socialBaseMode);
+    set("socialBaseCustom", data.socialBaseCustom);
+    set("housingPct", data.housingPct);
     set("subsidy", data.subsidy);
     if (data.deductions) deductionState = Object.assign(defaultDeductionState(), data.deductions);
     set("stock", data.stock);
@@ -1534,7 +1578,6 @@
   }
 
   // ---------- 初始化 ----------
-  $("calculationYear").value = CALCULATION_YEAR;
   $("joinDate").value = CALCULATION_YEAR + "-01-01";
   $("endDate").value = CALCULATION_YEAR + "-12-31";
   restoreState();
