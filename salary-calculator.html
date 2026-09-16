@@ -98,17 +98,38 @@
   }
   .input-wrap .suffix { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; pointer-events: none; }
   .input-wrap input { padding-right: 52px; }
-  .contribution-base-options { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fbfcfe; }
-  .contribution-base-option {
-    display: flex !important; align-items: center; gap: 8px; margin: 0 !important; padding: 9px 11px;
-    min-height: 42px; cursor: pointer; transition: background .15s, color .15s;
+  .contribution-base-picker { position: relative; }
+  .contribution-base-summary {
+    display: flex; align-items: center; gap: 8px; width: 100%; min-height: 42px; padding: 6px 8px 6px 11px;
+    border: 1px solid var(--line); border-radius: 10px; background: #fbfcfe; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
   }
-  .contribution-base-option + .contribution-base-option { border-top: 1px solid var(--line); }
-  .contribution-base-option.selected { background: var(--accent-soft); color: var(--accent); }
-  .contribution-base-option > input[type="radio"] { width: 15px; height: 15px; margin: 0; accent-color: var(--accent); flex: 0 0 auto; }
-  .contribution-base-option .option-name { min-width: 0; white-space: nowrap; }
-  .contribution-base-option .option-badge { font-size: 11px; font-weight: 500; color: var(--muted); }
-  .custom-base-entry { position: relative; flex: 1 1 100px; min-width: 100px; max-width: 150px; margin-left: auto; }
+  .contribution-base-summary.open { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+  .contribution-base-summary .summary-main {
+    display: flex; align-items: center; gap: 8px; flex: 1; align-self: stretch; min-width: 0;
+    padding: 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer;
+  }
+  .contribution-base-summary .summary-main:focus-visible, .contribution-base-summary .summary-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 5px; }
+  .contribution-base-summary .summary-name { font-size: 14px; font-weight: 600; white-space: nowrap; }
+  .contribution-base-summary .option-badge { font-size: 11px; color: var(--muted); }
+  .contribution-base-summary .summary-toggle { padding: 5px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+  .contribution-base-summary .picker-chevron { display: block; transition: transform .15s; }
+  .contribution-base-summary.open .picker-chevron { transform: rotate(180deg); }
+  .contribution-base-menu {
+    position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0;
+    overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: #fff;
+    box-shadow: 0 12px 30px rgba(15,23,42,.14);
+  }
+  .contribution-base-choice {
+    display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px;
+    border: 0; border-bottom: 1px solid var(--line); background: #fff; color: #374151;
+    font: inherit; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer;
+  }
+  .contribution-base-choice:last-child { border-bottom: 0; }
+  .contribution-base-choice:hover, .contribution-base-choice.selected { background: var(--accent-soft); color: var(--accent); }
+  .contribution-base-choice .choice-mark { width: 16px; color: transparent; }
+  .contribution-base-choice.selected .choice-mark { color: var(--accent); }
+  .custom-base-entry { position: relative; flex: 1 1 100px; min-width: 100px; max-width: 170px; margin-left: auto; }
   .custom-base-entry input {
     width: 100%; padding: 7px 48px 7px 9px; border: 1px solid var(--line); border-radius: 8px;
     font-size: 14px; color: var(--text); background: #fff;
@@ -307,23 +328,24 @@
         </div>
         <div class="field">
           <label>社保及公积金缴纳基数</label>
-          <div class="contribution-base-options" id="socialBaseMode">
-            <label class="contribution-base-option selected">
-              <input type="radio" name="socialBaseMode" value="salary" checked>
-              <span class="option-name">与基本工资一致</span><span class="option-badge">默认</span>
-            </label>
-            <label class="contribution-base-option">
-              <input type="radio" name="socialBaseMode" value="annual_package">
-              <span class="option-name">年总包 ÷ 12</span>
-            </label>
-            <label class="contribution-base-option">
-              <input type="radio" name="socialBaseMode" value="custom">
-              <span class="option-name">自定义金额</span>
-              <span class="custom-base-entry">
+          <div class="contribution-base-picker" id="socialBasePicker">
+            <input type="hidden" id="socialBaseMode" value="salary">
+            <div class="contribution-base-summary" id="socialBaseSummary">
+              <button type="button" class="summary-main" id="socialBaseSummaryButton" aria-haspopup="listbox" aria-expanded="false">
+                <span class="summary-name" id="socialBaseSummaryName">与基本工资一致</span>
+                <span class="option-badge" id="socialBaseSummaryBadge">默认</span>
+              </button>
+              <span class="custom-base-entry" id="socialBaseCustomEntry" hidden>
                 <input type="number" id="socialBaseCustom" value="20000" min="0" step="100" aria-label="自定义社保及公积金缴纳基数">
                 <span>元/月</span>
               </span>
-            </label>
+              <button type="button" class="summary-toggle" id="socialBaseToggleButton" aria-label="展开缴纳基数选项" aria-haspopup="listbox" aria-expanded="false"><span class="picker-chevron" aria-hidden="true">⌄</span></button>
+            </div>
+            <div class="contribution-base-menu" id="socialBaseMenu" role="listbox" hidden>
+              <button type="button" class="contribution-base-choice selected" data-contribution-mode="salary" role="option" aria-selected="true"><span class="choice-mark">✓</span>与基本工资一致（默认）</button>
+              <button type="button" class="contribution-base-choice" data-contribution-mode="annual_package" role="option" aria-selected="false"><span class="choice-mark">✓</span>年总包 ÷ 12</button>
+              <button type="button" class="contribution-base-choice" data-contribution-mode="custom" role="option" aria-selected="false"><span class="choice-mark">✓</span>自定义金额</button>
+            </div>
           </div>
           <div class="field-note" id="socialBaseHint">当前按基本工资 ¥20,000/月缴纳。</div>
         </div>
@@ -969,8 +991,7 @@
   }
 
   function selectedContributionBaseMode() {
-    const selected = document.querySelector('input[name="socialBaseMode"]:checked');
-    return selected ? selected.value : "salary";
+    return $("socialBaseMode").value || "salary";
   }
 
   function contributionBaseAmount() {
@@ -982,8 +1003,19 @@
 
   function syncContributionBaseUI() {
     const mode = selectedContributionBaseMode();
-    document.querySelectorAll(".contribution-base-option").forEach((option) => {
-      option.classList.toggle("selected", option.querySelector('input[type="radio"]').checked);
+    const labels = {
+      salary: "与基本工资一致",
+      annual_package: "年总包 ÷ 12",
+      custom: "自定义金额",
+    };
+    $("socialBaseSummaryName").textContent = labels[mode] || labels.salary;
+    $("socialBaseSummaryButton").hidden = mode === "custom";
+    $("socialBaseSummaryBadge").hidden = mode !== "salary";
+    $("socialBaseCustomEntry").hidden = mode !== "custom";
+    document.querySelectorAll("[data-contribution-mode]").forEach((choice) => {
+      const selected = choice.dataset.contributionMode === mode;
+      choice.classList.toggle("selected", selected);
+      choice.setAttribute("aria-selected", String(selected));
     });
     if (mode === "annual_package") {
       const annualPackage = estimatedAnnualPackage();
@@ -1503,10 +1535,7 @@
     set("joinDate", data.joinDate);
     set("endDate", data.endDate);
     set("base", data.base);
-    if (data.socialBaseMode) {
-      const mode = document.querySelector('input[name="socialBaseMode"][value="' + data.socialBaseMode + '"]');
-      if (mode) mode.checked = true;
-    }
+    set("socialBaseMode", data.socialBaseMode);
     set("socialBaseCustom", data.socialBaseCustom);
     set("housingPct", data.housingPct);
     set("subsidy", data.subsidy);
@@ -1554,12 +1583,31 @@
       stockVestingRatios = equalVestingRatios(parseInt($("stockVestingYears").value, 10) || 1);
       render();
     });
-    $("socialBaseCustom").addEventListener("focus", () => {
-      const customMode = document.querySelector('input[name="socialBaseMode"][value="custom"]');
-      if (customMode && !customMode.checked) {
-        customMode.checked = true;
+    const closeContributionBaseMenu = () => {
+      $("socialBaseMenu").hidden = true;
+      $("socialBaseSummary").classList.remove("open");
+      $("socialBaseSummaryButton").setAttribute("aria-expanded", "false");
+      $("socialBaseToggleButton").setAttribute("aria-expanded", "false");
+    };
+    const toggleContributionBaseMenu = () => {
+      const willOpen = $("socialBaseMenu").hidden;
+      $("socialBaseMenu").hidden = !willOpen;
+      $("socialBaseSummary").classList.toggle("open", willOpen);
+      $("socialBaseSummaryButton").setAttribute("aria-expanded", String(willOpen));
+      $("socialBaseToggleButton").setAttribute("aria-expanded", String(willOpen));
+    };
+    $("socialBaseSummaryButton").addEventListener("click", toggleContributionBaseMenu);
+    $("socialBaseToggleButton").addEventListener("click", toggleContributionBaseMenu);
+    document.querySelectorAll("[data-contribution-mode]").forEach((choice) => {
+      choice.addEventListener("click", () => {
+        $("socialBaseMode").value = choice.dataset.contributionMode;
+        closeContributionBaseMenu();
         render();
-      }
+        if (choice.dataset.contributionMode === "custom") $("socialBaseCustom").focus();
+      });
+    });
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest("#socialBasePicker")) closeContributionBaseMenu();
     });
     $("stockVestingList").addEventListener("change", (event) => {
       const input = event.target.closest("[data-vesting-ratio]");
