@@ -176,6 +176,8 @@
   table { width:100%; border-collapse:collapse; font-size:14px; min-width:900px; }
   th,td { padding:12px; text-align:right; white-space:nowrap; border-bottom:1px solid var(--line); }
   th { background:#f6f8fb; color:#475569; font-weight:600; }
+  #monthlyTable thead { position:relative; z-index:1; }
+  #monthlyTable th { box-shadow:inset 0 -1px var(--line); }
   th:first-child,td:first-child { text-align:left; }
   tbody tr:hover { background:#fafbfe; }
   .row-total td { background:#f6f8fb; font-weight:700; border-top:2px solid var(--line); }
@@ -1657,6 +1659,29 @@
     (data.extras || []).forEach((e) => addExtraRow(e.month, e.amount));
   }
 
+  // 横向滚动容器会限制 CSS sticky；移动原表头可保持列宽和横向位置同步。
+  function bindMonthlyHeader() {
+    const table = $("monthlyTable");
+    const header = table.tHead;
+    const update = () => {
+      const rect = table.getBoundingClientRect();
+      const offset = Math.max(0, Math.min(-rect.top, rect.height - header.offsetHeight));
+      header.style.transform = "translateY(" + offset + "px)";
+    };
+    let pending = false;
+    const schedule = () => {
+      if (pending) return;
+      pending = true;
+      window.requestAnimationFrame(() => { pending = false; update(); });
+    };
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    const observer = new ResizeObserver(schedule);
+    observer.observe(table);
+    observer.observe(document.querySelector(".workspace"));
+    schedule();
+  }
+
   // ---------- 事件绑定 ----------
   function bind() {
     document.querySelectorAll("input, select").forEach((el) => {
@@ -1810,6 +1835,7 @@
   $("socialBaseSummaryButton").setAttribute("aria-label", "选择社保及公积金缴纳基数");
   $("socialBaseMenu").setAttribute("aria-label", "缴纳基数口径");
   bind();
+  bindMonthlyHeader();
   renderDeductions();
   // 同步已选中方案卡片样式
   document.querySelectorAll(".mode-card").forEach((c) =>

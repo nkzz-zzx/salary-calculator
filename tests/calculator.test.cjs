@@ -43,7 +43,7 @@ function runtime({ render = false } = {}) {
   ` : '';
   vm.runInContext(script.slice(0, initialization) + renderSetup + `
     globalThis.api = { compute, buildRange, stockVestingEvents, latestPayoutEvent,
-      readInputs, saveState, restoreState, renderMonthly, render, calculationYear: CALCULATION_YEAR };
+      readInputs, saveState, restoreState, renderMonthly, render, bindMonthlyHeader, calculationYear: CALCULATION_YEAR };
   })();`, context);
   return { ...context.api, context, element, choices, storage };
 }
@@ -215,4 +215,48 @@ test('cash chart does not double-count consumption and handles cash shortfalls',
   api.render();
   assert.equal(api.element('annualBar').hidden, true);
   assert.ok(api.element('cashChartNote').textContent.includes('设置现金收入'));
+});
+
+test('monthly header follows page scroll, stays inside the table and resets when collapsed', () => {
+  const api = runtime();
+  const events = {};
+  const frames = [];
+  let resized;
+  let rect = { top: 200, height: 600 };
+  const header = { offsetHeight: 44, style: {} };
+  Object.assign(api.element('monthlyTable'), {
+    tHead: header, getBoundingClientRect: () => rect,
+  });
+  api.context.window = {
+    addEventListener: (name, callback) => { events[name] = callback; },
+    requestAnimationFrame: callback => { frames.push(callback); },
+  };
+  api.context.ResizeObserver = class {
+    constructor(callback) { resized = callback; }
+    observe() {}
+  };
+  const flush = () => { while (frames.length) frames.shift()(); };
+  api.bindMonthlyHeader();
+  flush();
+  assert.equal(header.style.transform, 'translateY(0px)');
+  rect.top = -180;
+  events.scroll();
+  flush();
+  assert.equal(header.style.transform, 'translateY(180px)');
+  rect.top = -580;
+  events.scroll();
+  flush();
+  assert.equal(header.style.transform, 'translateY(556px)');
+  rect = { top: 0, height: 0 };
+  resized();
+  flush();
+  assert.equal(header.style.transform, 'translateY(0px)');
+  rect = { top: -100, height: 700 };
+  resized();
+  flush();
+  assert.equal(header.style.transform, 'translateY(100px)');
+  rect.top = 100;
+  events.scroll();
+  flush();
+  assert.equal(header.style.transform, 'translateY(0px)');
 });
