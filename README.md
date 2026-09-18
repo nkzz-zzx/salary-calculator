@@ -1,6 +1,21 @@
 
+# 智能工具小站
 
-# 工资与个税计算器
+## 在线页面
+
+- [工具列表](https://zzxai.cn/)
+- [工资与个税计算器](https://zzxai.cn/salary-calculator.html)
+- [Agent 学习路线](https://zzxai.cn/agent-roadmap.html)：十周学习计划，包含实践任务、验收标准和开源资料。
+
+## 更新与部署
+
+站点使用纯静态 HTML。根目录保留页面源文件，`dist/` 为 EdgeOne 的发布目录。
+修改页面时，同步更新根目录及 `dist/` 中的对应文件，再提交到 `main` 分支。
+EdgeOne 已关联本仓库，`main` 推送会自动部署到 `zzxai.cn`；无需安装依赖或编译命令。
+
+本地预览：运行 `python3 -m http.server 8000 --directory dist`，打开 `http://localhost:8000`。
+
+## 工资与个税计算器
 
 #### 介绍
 工资与个税计算器是一款基于 Web 的综合薪资计算工具，帮助用户快速准确地计算税后工资、五险一金、奖金个税等。该工具支持多种计税模式，并提供直观的可视化图表和月度明细表，方便用户了解薪资构成和税务情况。
