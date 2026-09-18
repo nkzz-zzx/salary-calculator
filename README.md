@@ -7,6 +7,8 @@
 - [工资与个税计算器](https://zzxai.cn/salary-calculator.html)
 - [Agent 学习路线](https://zzxai.cn/agent-roadmap.html)：十周学习计划，包含实践任务、验收标准和开源资料。
 
+- [力扣 Hot 100 思路图解](https://zzxai.cn/hot100.html)：100 道题的直觉、步骤、例子、易错点与复杂度，配合 17 张题型示意图。
+
 ## 更新与部署
 
 站点使用纯静态 HTML。根目录保留页面源文件，`dist/` 为 EdgeOne 的发布目录。
