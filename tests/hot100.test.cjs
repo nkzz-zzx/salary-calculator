@@ -20,9 +20,10 @@ test('anchors and homepage entry resolve, publication copies stay identical', ()
   const ids = [...page.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
   assert.equal(new Set(ids).size, ids.length, 'unique IDs');
   for (const [, id] of page.matchAll(/href="#([^"]+)"/g)) assert.ok(ids.includes(id), `anchor ${id}`);
-  for (const name of ['index.html', 'hot100.html']) {
+  for (const name of ['index.html', 'hot100.html', 'hot100-demos.js']) {
     assert.equal(fs.readFileSync(path.join(root, name), 'utf8'), fs.readFileSync(path.join(root, 'dist', name), 'utf8'));
   }
+  assert.match(page, /src="\.\/hot100-demos\.js"/);
   const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.match(index, /href="\.\/hot100.html"/);
   assert.match(index, /3 个工具/);
