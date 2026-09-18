@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="面向已有开发经验的 Agent 工程学习路线：十周掌握 Agent 循环、工具、RAG、记忆、运行时、评估与架构设计。附实践任务、验收标准和开源资料。">
+<title>Agent 学习路线 · 智能工具小站</title>
+<style>
+  :root { --bg:#f4f6fb; --card:#fff; --line:#e5e9f2; --text:#172033; --muted:#526278; --accent:#2563eb; --soft:#eaf1fe; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; scroll-padding-top:24px; }
+  body { margin:0; color:var(--text); background:var(--bg); font:16px/1.85 "PingFang SC","Microsoft YaHei",system-ui,sans-serif; }
+  a { color:#1d4ed8; text-underline-offset:4px; }
+  a:hover { text-decoration:underline; }
+  a:focus-visible, summary:focus-visible { outline:3px solid #2563eb; outline-offset:5px; border-radius:3px; }
+  .skip { position:absolute; left:16px; top:-100px; padding:8px 16px; background:#fff; z-index:2; }
+  .skip:focus { top:12px; }
+  .wrap { width:min(1120px,calc(100% - 40px)); margin:auto; }
+  header { color:#fff; background:linear-gradient(120deg,#172e63,#245aca 70%,#3b82f6); }
+  .topbar { display:flex; justify-content:space-between; gap:16px; padding:22px 0; font-size:14px; }
+  header a { color:#fff; }
+  .hero { padding:22px 0 48px; max-width:780px; }
+  .eyebrow { font-size:13px; letter-spacing:.12em; color:#dbeafe; }
+  h1 { font-size:clamp(32px,6vw,48px); line-height:1.25; margin:12px 0 16px; letter-spacing:.02em; }
+  .hero p { color:#e0eaff; margin:0 0 20px; }
+  .pills { display:flex; flex-wrap:wrap; gap:10px; }
+  .pills span { border:1px solid #ffffff50; border-radius:30px; padding:4px 12px; font-size:13px; }
+  .layout { display:grid; grid-template-columns:220px minmax(0,1fr); gap:32px; align-items:start; padding:32px 0 48px; }
+  aside { position:sticky; top:24px; font-size:14px; }
+  aside strong { display:block; margin-bottom:10px; color:var(--muted); }
+  aside a { display:block; padding:7px 12px; border-left:2px solid #d7dfed; color:var(--muted); text-decoration:none; }
+  aside a:hover { border-color:var(--accent); color:var(--accent); background:var(--soft); }
+  main { min-width:0; }
+  section { margin-bottom:24px; padding:28px; border:1px solid var(--line); border-radius:16px; background:var(--card); box-shadow:0 5px 24px #1e3a8a05; }
+  h2 { font-size:24px; line-height:1.45; margin:0 0 16px; }
+  h3 { font-size:17px; margin:24px 0 8px; }
+  p { margin:10px 0; }
+  ul,ol { padding-left:22px; margin:10px 0; }
+  li { margin:6px 0; }
+  .label { color:var(--accent); font-size:13px; font-weight:700; display:block; margin-bottom:8px; letter-spacing:.04em; }
+  .callout { background:var(--soft); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:14px 18px; margin-top:20px; }
+  .callout p { margin:0; }
+  .flow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:20px 0; }
+  .flow span { padding:5px 11px; border:1px solid var(--line); border-radius:8px; font-size:14px; }
+  .flow b { color:var(--muted); }
+  .table-scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th,td { padding:12px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+  th { color:var(--muted); background:#f8fafc; font-weight:600; }
+  td:first-child { min-width:94px; font-weight:600; }
+  details { border-top:1px solid var(--line); margin-top:20px; padding-top:14px; }
+  summary { cursor:pointer; color:var(--accent); font-weight:600; }
+  .resources { font-size:14px; }
+  .muted { color:var(--muted); font-size:14px; }
+  .start { background:#eff6ff; }
+  footer { text-align:center; color:var(--muted); font-size:13px; padding:0 20px 32px; }
+  @media(max-width:780px) { .layout { grid-template-columns:1fr; gap:20px; } aside { position:static; } aside nav { display:flex; flex-wrap:wrap; gap:8px; } aside a { border:1px solid var(--line); border-radius:8px; padding:5px 10px; background:#fff; } section { padding:22px; } }
+  @media(max-width:420px) { .wrap { width:calc(100% - 28px); } section { padding:18px; } h2 { font-size:22px; } .topbar { font-size:13px; } }
+  @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+  @media print { body { background:#fff; font-size:12pt; } header { color:#172033; background:none; } header a,.hero p,.eyebrow { color:#172033; } aside,.topbar,.skip { display:none; } .layout { display:block; } section { box-shadow:none; border:none; padding:0; } .wrap { width:100%; } h2,h3 { break-after:avoid; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到学习内容</a>
+<header>
+  <div class="wrap">
+    <div class="topbar"><a href="./index.html">← 智能工具小站</a><a href="https://github.com/nkzz-zzx/zzxai-site">GitHub 仓库 ↗</a></div>
+    <div class="hero">
+      <div class="eyebrow">AGENT ENGINEERING · 学习与实践</div>
+      <h1>Agent 学习路线</h1>
+      <p>从维护现有功能，到理解、设计和验证完整的 Agent 系统。用一个持续迭代的项目，串起原理、源码和生产工程。</p>
+      <div class="pills"><span>约 10 周</span><span>每周 6–8 小时</span><span>7 个学习阶段</span><span>实践 · 源码 · 验收</span></div>
+    </div>
+  </div>
+</header>
+<div class="wrap layout">
+  <aside aria-label="学习目录"><strong>学习目录</strong><nav>
+    <a href="#overview">01 / 技术地图</a><a href="#project">02 / 贯穿项目</a><a href="#week1">第 1 周 · 基本机制</a><a href="#week2">第 2 周 · 核心循环</a><a href="#week3">第 3–4 周 · 上下文</a><a href="#week5">第 5 周 · 工具与 MCP</a><a href="#week6">第 6–7 周 · 运行时</a><a href="#week8">第 8 周 · 评估</a><a href="#week9">第 9–10 周 · 架构</a><a href="#sources">03 / 源码与课程</a><a href="#practice">04 / 工作中的积累</a><a href="#start">从这里开始</a>
+  </nav></aside>
+  <main id="main">
+    <section id="overview">
+      <span class="label">01 · 建立全局视角</span><h2>先理解系统，再比较实现</h2>
+      <p>适合已经能够阅读业务代码、调用模型 API，希望独立设计和迭代 Agent 的开发者。时间安排只是参考，以每阶段的验收标准为准。</p>
+      <p><strong>学习主线：</strong>理解基本机制 → 手写核心功能 → 阅读不同实现 → 补齐生产工程 → 用评估验证设计。</p>
+      <div class="flow" aria-label="Agent 执行循环"><span>接收任务</span><b>→</b><span>读取状态</span><b>→</b><span>组织上下文</span><b>→</b><span>调用模型</span><b>→</b><span>执行工具</span><b>→</b><span>记录结果</span><b>↺</b><span>继续或结束</span></div>
+      <div class="table-scroll"><table><thead><tr><th scope="col">知识层</th><th scope="col">核心问题</th><th scope="col">学习内容</th></tr></thead><tbody>
+        <tr><td>模型基础</td><td>能力和限制从哪里来？</td><td>Token、Transformer、推理、采样、结构化输出</td></tr>
+        <tr><td>控制逻辑</td><td>谁决定下一步？</td><td>Workflow、Agent loop、路由、规划、终止条件</td></tr>
+        <tr><td>工具与环境</td><td>如何完成真实操作？</td><td>Tool calling、参数校验、执行器、MCP、沙箱</td></tr>
+        <tr><td>上下文与知识</td><td>每一步给模型看什么？</td><td>Prompt、检索、历史裁剪、摘要、记忆</td></tr>
+        <tr><td>状态与运行时</td><td>任务如何持续和恢复？</td><td>状态机、Checkpoint、并发、取消、事件流</td></tr>
+        <tr><td>评估与运维</td><td>如何证明有效？</td><td>测试集、Trace、成功率、延迟、成本、安全边界</td></tr>
+      </tbody></table></div>
+      <div class="callout"><p>模型负责生成或决策；应用程序负责执行、保存状态和实施约束。理解这条职责边界，才能看懂不同框架背后的共同结构。</p></div>
+    </section>
+    <section id="project">
+      <span class="label">02 · 一个持续迭代的项目</span><h2>技术资料研究助手</h2>
+      <p>用户提出技术问题，Agent 搜索和读取资料，整理有来源的答案，必要时继续检索，并保存研究结果。</p>
+      <p>从本地文档搜索与读取开始，逐步增加多轮工具调用、检索与压缩、跨会话记忆、流式进度、暂停恢复、并行研究和自动评估。使用公开资料，在独立练习目录完成。</p>
+      <div class="callout"><p><strong>第一天的产出：</strong>整理约 20 个固定问题。以后更换模型、Prompt、检索策略或框架时，都用它们做对照。</p></div>
+    </section>
+    <section id="week1">
+      <span class="label">第 1 周 · 基本机制</span><h2>理解 Agent 的形态和模型边界</h2>
+      <ul><li>区分单次模型调用、固定 Workflow 与自主 Agent，理解三者如何组合。</li><li>理解 ReAct 中推理、行动与观察的交替过程。</li><li>追踪工具声明、模型提出调用、程序执行、结果回传的完整交互。</li><li>掌握 Token、上下文窗口、采样参数、结构化输出；了解预训练、指令微调和偏好优化分别改变什么。</li></ul>
+      <h3>动手实践</h3><p>对同一批资料和问题，分别实现直接回答、固定检索后回答、模型决定是否继续检索。记录正确性、调用次数和耗时。</p>
+      <div class="callout"><p><strong>验收：</strong>能解释一个任务为什么适合固定流程，另一个为什么需要动态循环。</p></div>
+      <details open><summary>阅读资料</summary><ul class="resources"><li><a href="https://www.anthropic.com/engineering/building-effective-agents">Building effective agents</a>：理解架构模式和复杂度取舍。</li><li><a href="https://huggingface.co/learn/agents-course/unit0/introduction">Hugging Face Agents Course</a>：先学习基础单元。</li><li><a href="https://arxiv.org/abs/2210.03629">ReAct 原论文</a>：先读问题、方法和示例。</li><li><a href="https://huggingface.co/learn/llm-course/chapter1/1">Hugging Face LLM Course</a>：按需补 Transformer、Tokenizer 和推理基础。</li></ul></details>
+    </section>
+    <section id="week2">
+      <span class="label">第 2 周 · 核心循环</span><h2>手写一个最小 Agent</h2>
+      <p>使用模型 SDK 和普通函数，先支持搜索文档、读取文档、保存报告三个工具。</p>
+      <ul><li>实现消息历史、工具声明与注册、参数解析和校验、调用分发、结果回填。</li><li>处理最终回答、最大轮数、超时与失败；记录每轮输入、输出和耗时。</li><li>处理一次响应中的多个工具调用，保证结果对应正确的调用。</li><li>明确工具失败后允许模型修正参数的条件，以及必须终止的条件。</li></ul>
+      <div class="callout"><p><strong>验收：</strong>不依赖 Agent 框架也能完成多轮调用；遇到无效参数和反复调用时，任务能够受控结束。</p></div>
+      <details open><summary>源码对照</summary><p class="resources">阅读 <a href="https://github.com/huggingface/smolagents">smolagents</a>，关注执行循环、工具执行、历史记录和终止处理，比较工具调用型与代码执行型 Agent。</p></details>
+    </section>
+    <section id="week3">
+      <span class="label">第 3–4 周 · 上下文与知识</span><h2>深入 RAG、上下文管理和记忆</h2>
+      <p>每轮模型调用前，都要决定哪些信息应该进入有限的上下文。</p>
+      <div class="table-scroll"><table><thead><tr><th scope="col">能力</th><th scope="col">学习内容</th><th scope="col">实验</th></tr></thead><tbody>
+        <tr><td>检索</td><td>切块、关键词、Embedding、混合检索、重排、引用</td><td>比较关键词与向量检索的命中情况</td></tr>
+        <tr><td>上下文管理</td><td>历史裁剪、摘要、工具结果截断、按需读取</td><td>比较完整历史、最近若干轮、摘要加最近历史</td></tr>
+        <tr><td>长期记忆</td><td>写入、提取、去重、更新、召回、过期、用户隔离</td><td>用户更正后，下一会话能否使用新事实</td></tr>
+      </tbody></table></div>
+      <p>先建立关键词检索基线，再增加向量检索并记录收益。小规模练习可以直接计算相似度，按实际存储和查询需求引入向量数据库。</p>
+      <h3>区分四类数据</h3><ul><li><strong>任务状态：</strong>当前进行到哪一步。</li><li><strong>会话历史：</strong>发生过哪些交互。</li><li><strong>长期记忆：</strong>未来会话需要保留的事实或偏好。</li><li><strong>知识库：</strong>可以检索的外部资料。</li></ul><p>它们可以共享存储设施，但生命周期和读写规则不同。</p>
+      <div class="callout"><p><strong>验收：</strong>能判断回答错误来自资料缺失、检索未命中、上下文遗漏，还是模型使用证据错误。</p></div>
+      <details open><summary>阅读资料</summary><p class="resources"><a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Effective context engineering for AI agents</a>：重点看按需获取信息、上下文压缩和结构化笔记。</p></details>
+    </section>
+    <section id="week5">
+      <span class="label">第 5 周 · 工具与协议</span><h2>设计可靠工具，理解 MCP</h2>
+      <ul><li>设计清晰的名称、描述、参数结构和返回格式；控制分页、粒度和结果长度。</li><li>区分参数错误、业务失败和网络故障；判断哪些操作可重试，哪些需要幂等保护。</li><li>隔离外部文档中的指令；理解代码执行的文件、网络、凭据与资源边界。</li><li>将一个已有工具接成 MCP，理解 Host、Client、Server 以及工具发现和调用过程。</li></ul>
+      <p>MCP 负责连接外部能力，Agent 的决策和权限控制仍需要系统设计。</p>
+      <div class="callout"><p><strong>验收：</strong>画出模型提出调用、权限检查、实际执行、结果回传的完整链路，解释 MCP 接入前后改变了哪一层。</p></div>
+      <details open><summary>阅读资料</summary><ul class="resources"><li><a href="https://modelcontextprotocol.io/docs/learn/architecture">MCP 架构文档</a></li><li><a href="https://www.anthropic.com/engineering/writing-tools-for-agents">Writing effective tools for agents</a></li></ul></details>
+    </section>
+    <section id="week6">
+      <span class="label">第 6–7 周 · 运行时工程</span><h2>让任务能够持续、取消和恢复</h2>
+      <p>学习显式状态与转换、Checkpoint、人工介入、并行执行、超时取消、流式事件、重试与副作用，以及会话隔离和并发更新。</p>
+      <h3>动手实践</h3><p>用 LangGraph 再实现一次手写版本，比较状态、恢复与执行控制。重点理解框架解决的问题。</p>
+      <h3>四个故障实验</h3><ol><li>工具很慢时取消任务，后台是否真正停止？</li><li>进程重启后，任务能否从持久化状态恢复？</li><li>报告已保存，但保存执行结果前进程崩溃，恢复后会怎样？</li><li>中间进度是否在任务完成前到达消费端？</li></ol>
+      <p><strong>保存了 Checkpoint，并不自动保证外部操作只执行一次。</strong>要沿真实执行链路检查重跑和副作用。</p>
+      <div class="callout"><p><strong>验收：</strong>能说明状态保存在哪里、恢复时哪些步骤会重跑，以及副作用如何处理。</p></div>
+      <details open><summary>阅读资料</summary><ul class="resources"><li><a href="https://docs.langchain.com/oss/python/langgraph/overview">LangGraph overview</a>：编排和运行时。</li><li><a href="https://docs.langchain.com/oss/python/langgraph/persistence">LangGraph persistence</a>：线程状态与跨线程存储。</li></ul></details>
+    </section>
+    <section id="week8">
+      <span class="label">第 8 周 · 评估与迭代</span><h2>用证据判断优化是否有效</h2>
+      <p>将问题集扩充到约 30–50 条，覆盖单文档回答、多文档综合、信息不足、资料矛盾、工具故障、长历史、用户更正和外部干扰指令。</p>
+      <p>为每条样例记录预期事实、证据和必要约束，允许开放任务存在多种有效执行路径。</p>
+      <div class="table-scroll"><table><thead><tr><th scope="col">指标</th><th scope="col">作用</th></tr></thead><tbody><tr><td>任务成功率</td><td>用户目标是否完成</td></tr><tr><td>证据与引用正确性</td><td>结论能否被资料支持</td></tr><tr><td>工具调用错误率</td><td>接口和决策是否可靠</td></tr><tr><td>耗时、调用次数、Token 成本</td><td>收益是否值得</td></tr><tr><td>重复运行的波动</td><td>单次成功能否稳定复现</td></tr></tbody></table></div>
+      <p>能用规则判断的内容优先用规则；语义判断可以引入模型评分并抽样人工核对。保留一部分未参与调优的验证样例。</p>
+      <div class="callout"><p><strong>验收：</strong>修改 Prompt、检索方式或模型后，能用同一套样例说明收益、代价和退化点。</p></div>
+      <details open><summary>阅读资料</summary><p class="resources"><a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents">Demystifying evals for AI agents</a></p></details>
+    </section>
+    <section id="week9">
+      <span class="label">第 9–10 周 · 架构选择</span><h2>比较单 Agent、Workflow 与多 Agent</h2>
+      <p>在同一个研究任务上，比较单 Agent 顺序完成、固定并行检索后汇总、主 Agent 动态拆分并委派子任务。</p>
+      <ul><li>观察任务拆分、上下文隔离、结果汇总、失败传播和成本。</li><li>用评估集判断多 Agent 在哪些任务上有实际收益。</li><li>阅读长任务实现，观察规划、文件系统、上下文管理和子 Agent 如何组合。</li></ul>
+      <div class="callout"><p><strong>验收：</strong>写一页架构决策说明：任务特点、方案选择、成本，以及支持选择的实验结果。</p></div>
+      <details open><summary>源码对照</summary><p class="resources"><a href="https://github.com/langchain-ai/deepagents">Deep Agents</a>：理解长任务运行环境如何组合各项能力。</p></details>
+    </section>
+    <section id="sources">
+      <span class="label">03 · 开源实现与课程</span><h2>带着问题阅读源码</h2>
+      <div class="table-scroll"><table><thead><tr><th scope="col">顺序 / 项目</th><th scope="col">阅读目标</th></tr></thead><tbody><tr><td><a href="https://github.com/SWE-agent/mini-swe-agent">1. mini-swe-agent</a></td><td>最小循环如何与真实执行环境交互</td></tr><tr><td><a href="https://github.com/huggingface/smolagents">2. smolagents</a></td><td>工具、模型适配、执行步骤和代码执行</td></tr><tr><td><a href="https://github.com/langchain-ai/langgraph">3. LangGraph</a></td><td>状态、编排、持久化、暂停与恢复</td></tr><tr><td><a href="https://github.com/langchain-ai/deepagents">4. Deep Agents</a></td><td>长任务需要的完整运行环境</td></tr></tbody></table></div>
+      <p>每次只追一条请求：<strong>入口 → 上下文构造 → 模型调用 → 工具执行 → 状态更新 → 输出</strong>，然后沿同一路径追一个失败案例。固定版本或 commit，记录实现，方便后续比较。</p>
+      <p>中文教材可用 <a href="https://github.com/datawhalechina/hello-agents">Datawhale《Hello Agents》</a>，课程主线可选 <a href="https://huggingface.co/learn/agents-course/unit0/introduction">Hugging Face Agents Course</a>。SDK 用法与安装版本不一致时，以对应版本的官方文档为准。</p>
+    </section>
+    <section id="practice">
+      <span class="label">04 · 在工作中持续积累</span><h2>把一次修复，变成一个通用认识</h2>
+      <p>每周选一个正在处理的问题，写一张学习卡片：</p><ol><li><strong>问题归类：</strong>它属于上下文、工具、记忆、恢复还是评估？</li><li><strong>当前实现：</strong>业务约束、历史原因和性能要求是什么？</li><li><strong>替代方案：</strong>找一种外部实现对照。</li><li><strong>验证方式：</strong>构造输入、故障场景和衡量指标。</li><li><strong>可迁移结论：</strong>写出脱离当前项目仍成立的认识。</li></ol>
+      <p>聊天记忆更新可以延伸到事实冲突与生命周期；工具超时可以延伸到取消传播、重试和幂等；流式输出可以延伸到事件顺序与任务生命周期。</p>
+    </section>
+    <section id="start" class="start"><span class="label">开始行动</span><h2>本周完成三件事</h2><ol><li>读 <a href="https://www.anthropic.com/engineering/building-effective-agents">Agent 架构基础文章</a>，画出自己的技术地图。</li><li>为研究助手整理 20 个有证据可查的问题。</li><li>画出当前项目一次请求的真实调用链。</li></ol><p>后续每学一个模块，回到调用链标注它的位置，比较其他实现为什么做出不同选择。</p><p class="muted">整理日期：2026-09-18 · 学习资料以各项目官方文档为准。</p><a href="#overview">回到技术地图 ↑</a></section>
+  </main>
+</div>
+<footer><a href="./index.html">智能工具小站</a> · <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">京ICP备2026061235号-1</a></footer>
+</body>
+</html>
