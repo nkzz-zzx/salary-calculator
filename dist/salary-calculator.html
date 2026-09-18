@@ -29,8 +29,8 @@
   .card { min-width:0; padding:24px; border:1px solid var(--line); border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow); }
   .card h2 { font-size:18px; margin:0 0 16px; }
   .input-card { grid-column:1; grid-row:1; }
-  .results-card { grid-column:2; grid-row:1 / 3; }
-  .settings-card { grid-column:1; grid-row:2; }
+  .results-card { grid-column:1 / -1; grid-row:2; }
+  .settings-card { grid-column:2; grid-row:1; }
   .monthly-section { grid-column:1 / -1; }
   .section-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; }
   .section-heading h2 { margin:0; }
@@ -281,6 +281,23 @@
       </div>
 
     </section>
+    <section class="card settings-card">
+      <h2>收入与支出明细</h2>
+      <p class="sub">按需设置，结果会自动更新。</p>
+      <div class="settings-menu-grid" id="settingsMenu">
+        <button type="button" class="settings-menu-card" data-settings-panel="bonus" aria-haspopup="dialog" aria-controls="settingsDialog"><span class="menu-title">年终奖</span><span class="menu-summary" id="bonusMenuSummary">未设置</span><span class="menu-arrow" aria-hidden="true"></span></button>
+        <button type="button" class="settings-menu-card" data-settings-panel="stock" aria-haspopup="dialog" aria-controls="settingsDialog"><span class="menu-title">股票 / 股权</span><span class="menu-summary" id="stockMenuSummary">未设置</span><span class="menu-arrow" aria-hidden="true"></span></button>
+        <button type="button" class="settings-menu-card" data-settings-panel="housing" aria-haspopup="dialog" aria-controls="settingsDialog"><span class="menu-title">公积金</span><span class="menu-summary" id="housingMenuSummary">未设置</span><span class="menu-arrow" aria-hidden="true"></span></button>
+        <button type="button" class="settings-menu-card" data-settings-panel="deductions" aria-haspopup="dialog" aria-controls="settingsDialog"><span class="menu-title">专项附加扣除与养老金</span><span class="menu-summary" id="deductionMenuSummary">未设置</span><span class="menu-arrow" aria-hidden="true"></span></button>
+        <button type="button" class="settings-menu-card" data-settings-panel="consumption" aria-haspopup="dialog" aria-controls="settingsDialog"><span class="menu-title">消费支出</span><span class="menu-summary" id="consumptionMenuSummary">未设置</span><span class="menu-arrow" aria-hidden="true"></span></button>
+      </div>
+      <details class="assumption-details">
+        <summary>查看计算口径与假设</summary>
+        <div class="note">
+          完整年总包按一个完整自然年度的 1—12 月计算，年终奖不做时间折算；实际在职区间按自然日在职天数折算起止月工资、五险一金及年终奖。股票 / 股权按所选比例逐年归属：完整年模式从首个完整年度算第 1 归属年，区间模式按入职周年日归属，并按类别决定合并、单独或递延计税。五险一金个人部分按统一缴纳基数计算：养老 8% + 医疗 2% + 失业 0.5% + 公积金（按系数），未考虑各地缴费基数上下限。股票与年终奖不重复缴纳五险一金。
+        </div>
+      </details>
+    </section>
     <section class="card results-card" id="resultsCard">
       <div class="section-heading"><h2>计算结果</h2><span class="badge" id="resultModeLabel">全年</span></div>
       <p class="result-context" id="resultRange"></p>
@@ -300,23 +317,6 @@
           <div class="secondary-details-body"><div class="kpis" id="secondaryKpis"></div></div>
         </details>
       </div>
-    </section>
-    <section class="card settings-card">
-      <h2>收入与支出明细</h2>
-      <p class="sub">按需设置，结果会自动更新。</p>
-      <div class="settings-menu-grid" id="settingsMenu">
-        <button type="button" class="settings-menu-card" data-settings-panel="bonus" aria-haspopup="dialog" aria-controls="settingsDialog"><span class="menu-title">年终奖</span><span class="menu-summary" id="bonusMenuSummary">未设置</span><span class="menu-arrow" aria-hidden="true"></span></button>
-        <button type="button" class="settings-menu-card" data-settings-panel="stock" aria-haspopup="dialog" aria-controls="settingsDialog"><span class="menu-title">股票 / 股权</span><span class="menu-summary" id="stockMenuSummary">未设置</span><span class="menu-arrow" aria-hidden="true"></span></button>
-        <button type="button" class="settings-menu-card" data-settings-panel="housing" aria-haspopup="dialog" aria-controls="settingsDialog"><span class="menu-title">公积金</span><span class="menu-summary" id="housingMenuSummary">未设置</span><span class="menu-arrow" aria-hidden="true"></span></button>
-        <button type="button" class="settings-menu-card" data-settings-panel="deductions" aria-haspopup="dialog" aria-controls="settingsDialog"><span class="menu-title">专项附加扣除与养老金</span><span class="menu-summary" id="deductionMenuSummary">未设置</span><span class="menu-arrow" aria-hidden="true"></span></button>
-        <button type="button" class="settings-menu-card" data-settings-panel="consumption" aria-haspopup="dialog" aria-controls="settingsDialog"><span class="menu-title">消费支出</span><span class="menu-summary" id="consumptionMenuSummary">未设置</span><span class="menu-arrow" aria-hidden="true"></span></button>
-      </div>
-      <details class="assumption-details">
-        <summary>查看计算口径与假设</summary>
-        <div class="note">
-          完整年总包按一个完整自然年度的 1—12 月计算，年终奖不做时间折算；实际在职区间按自然日在职天数折算起止月工资、五险一金及年终奖。股票 / 股权按所选比例逐年归属：完整年模式从首个完整年度算第 1 归属年，区间模式按入职周年日归属，并按类别决定合并、单独或递延计税。五险一金个人部分按统一缴纳基数计算：养老 8% + 医疗 2% + 失业 0.5% + 公积金（按系数），未考虑各地缴费基数上下限。股票与年终奖不重复缴纳五险一金。
-        </div>
-      </details>
     </section>
     <details class="card monthly-section">
       <summary><span>月度明细</span><small id="monthlySummary">共 12 个月</small></summary>
