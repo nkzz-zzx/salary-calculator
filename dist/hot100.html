@@ -78,7 +78,7 @@ tan → a:1,n:1,t:1 → 新组</pre><p class="trap"><strong>容易踩的坑：</
 5和4：4×1=4 → 最佳6</pre><p class="trap"><strong>容易踩的坑：</strong>移动高板没有改善上限；相等时任选一端移动即可。</p><p class="cost"><strong>复杂度：</strong>时间 O(n)，空间 O(1)。</p><div class="links"><a href="https://leetcode.cn/problems/container-with-most-water/" target="_blank" rel="noopener">打开力扣原题 ↗</a><a href="#q-11">本题定位链接</a></div></div></details>
 <details class="problem" id="q-15" data-category="1" data-id="15"><summary><span class="title-row"><span class="qid">15</span><span class="name">三数之和</span><span class="difficulty MEDIUM">中等</span><span class="chev" aria-hidden="true">›</span></span><span class="hook">三人凑成零：先固定一个人，另外两人在有序队伍两端向中间找平衡。</span></summary><div class="body"><h4>一步步推导</h4><ol>
 <li>先排序，依次固定 nums[i]，跳过重复的固定值。</li>
-<li>用左右指针搜索和为 −nums[i] 的二元组，和小左移、和大右移。</li>
+<li>用左右指针搜索和为 −nums[i] 的二元组，和小就让左指针右移，和大就让右指针左移。</li>
 <li>找到答案后两边收缩，并跳过重复值。</li>
 </ol><h4>跟着例子走一遍</h4><pre class="trace">[-2,-1,0,1,2]
 固定-2：寻找和2 → (0,2)
@@ -570,7 +570,7 @@ i=1,j=1 → 左[1,2]，右[3,4]
 35解决31与32，分别等1天、2天
 答案[1,2,1,0]</pre><p class="trap"><strong>容易踩的坑：</strong>要求严格升温，相等时不能弹出并结算。</p><p class="cost"><strong>复杂度：</strong>时间 O(n)，空间 O(n)。</p><div class="links"><a href="https://leetcode.cn/problems/daily-temperatures/" target="_blank" rel="noopener">打开力扣原题 ↗</a><a href="#q-739">本题定位链接</a></div></div></details>
 <details class="problem" id="q-84" data-category="11" data-id="84"><summary><span class="title-row"><span class="qid">84</span><span class="name">柱状图中最大的矩形</span><span class="difficulty HARD">困难</span><span class="chev" aria-hidden="true">›</span></span><span class="hook">每根柱子都想当一座矩形的最低屋顶，左右第一根更矮柱子就是它的边界。</span></summary><div class="body"><h4>一步步推导</h4><ol>
-<li>维护高度递增的下标栈，末尾追加高度0用于清算。</li>
+<li>维护高度非递减的下标栈，末尾追加高度0用于清算。</li>
 <li>新高度更低时弹出栈顶柱子，以其高度计算矩形。</li>
 <li>弹出后新栈顶是左边界，当前下标是右边界，宽度为right−left−1。</li>
 </ol><h4>跟着例子走一遍</h4><pre class="trace">[2,1,5,6,2,3]
